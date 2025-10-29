@@ -14,7 +14,7 @@ install:
 
 # Run the main workflow
 run:
-	uv run python main.py
+	uv run python workflow.py
 
 # Display help information
 help:
