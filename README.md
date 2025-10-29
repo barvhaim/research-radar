@@ -1,6 +1,8 @@
 # Research Radar
 
-A research paper discovery and analysis tool that uses LangGraph workflows to extract, analyze, and process academic papers.
+<img src="logo.png" alt="Research Radar Logo" width="400"/>
+
+A research paper discovery and analysis tool that uses AI to extract, analyze, and process academic papers.
 
 ## Quick Start
 
