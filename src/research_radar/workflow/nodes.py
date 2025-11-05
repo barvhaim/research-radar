@@ -25,7 +25,7 @@ def extract_paper_information_node(state: WorkflowState) -> Command:
     """
     paper_id = state.get("paper_id")
     if not paper_id:
-        return Command(goto=END, update={"error": "No paper id provided."})
+        return Command(goto=END, update={"error": "No paper ID provided."})
 
     logger.info(
         "Extracting paper (%s) information",
