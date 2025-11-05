@@ -58,7 +58,7 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
 
     logger.info("Extracting paper content")
 
-    # TODO: Get paper PDF url from state
+    # TODO: Get paper PDF url from state starting now
     # TODO: Implement content extraction logic
 
     return Command(
