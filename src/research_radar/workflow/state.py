@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from typing_extensions import TypedDict
 
 
@@ -22,3 +22,5 @@ class WorkflowState(TypedDict):
     metadata: Optional[Dict]
     status: WorkflowStatus
     error: Optional[str]
+    required_keywords: List[str]  
+    relevance_result: Optional[bool]
