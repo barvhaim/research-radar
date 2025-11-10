@@ -3,10 +3,13 @@ from langgraph.graph import END
 from langgraph.types import Command
 from research_radar.workflow.state import WorkflowState, WorkflowStatus
 from research_radar.core.paper_metadata_extractor import PaperMetadataExtractor
+from research_radar.core.paper_relevance_checker import PaperRelevanceChecker
 from research_radar.workflow.node_types import (
     EXTRACT_PAPER_CONTENT,
     ANALYZE_PAPER,
     PUBLISH_RESULTS,
+    FILTER_PAPER_RELEVANCE,
+    EXTRACT_PAPER_INFORMATION,
 )
 
 
@@ -37,12 +40,64 @@ def extract_paper_information_node(state: WorkflowState) -> Command:
     metadata = extractor.extract_metadata()
 
     return Command(
-        goto=EXTRACT_PAPER_CONTENT,
+        goto=FILTER_PAPER_RELEVANCE,
         update={
             "status": WorkflowStatus.RUNNING.value,
             "metadata": metadata,
         },
     )
+
+def filter_paper_relevance_node(state: WorkflowState) -> Command:
+    """
+    Node that filters the paper based on keyword relevance, 
+    using the PaperRelevanceChecker class.
+
+    Args:
+        state (WorkflowState): The current state of the workflow.
+
+    Returns:
+        Command: A command to continue or end the workflow.
+    """
+    metadata = state.get("metadata")
+    # Note: required_keywords is now a List[str] from the updated state.py
+    required_keywords = state.get("required_keywords", []) 
+    paper_id = state.get("paper_id")
+    
+    # Validation check
+    if not metadata or not required_keywords:
+        logger.warning(
+            f"Filter Error: Missing metadata or required_keywords for paper {paper_id}. Ending workflow."
+        )
+        return Command(
+            goto=END,
+            update={
+                "status": WorkflowStatus.FAILED.value,
+                "error": "Missing metadata or required keywords for relevance check.",
+                "relevance_result": False,
+            },
+        )
+
+    # --- Use the new Class to perform the logic ---
+    checker = PaperRelevanceChecker(
+        metadata=metadata, 
+        required_keywords=required_keywords,
+        min_match_threshold=5 
+    )
+    
+    is_relevant = checker.check_relevance()
+    # ---------------------------------------------
+    
+    # We pass the result to the state. The conditional edge in graph.py decides the next step.
+    return Command(
+        update={
+            "status": WorkflowStatus.RUNNING.value,
+            "relevance_result": is_relevant,
+        },
+
+    )
+
+
+
 
 
 def extract_paper_content_node(state: WorkflowState) -> Command:
