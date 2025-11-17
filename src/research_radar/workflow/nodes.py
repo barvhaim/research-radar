@@ -6,6 +6,7 @@ from langgraph.types import Command
 from research_radar.workflow.state import WorkflowState, WorkflowStatus
 from research_radar.core.paper_metadata_extractor import PaperMetadataExtractor
 from research_radar.core.paper_relevance_checker import PaperRelevanceChecker
+from research_radar.core.paper_content_extractor import PaperContentExtractor
 from research_radar.workflow.node_types import (
     EXTRACT_PAPER_CONTENT,
     ANALYZE_PAPER,
@@ -128,12 +129,18 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
 
     logger.info("Extracting paper content")
 
-    # TODO: Get paper PDF url from state
-    # TODO: Implement content extraction logic
+    source = state.metadata.get("arxiv_pdf_url")
+    if not source:
+        raise ValueError("Error: arxiv url is missing or None.")
+
+    extractor = PaperContentExtractor(source)
+    content = extractor.extract_content()
 
     return Command(
         goto=ANALYZE_PAPER,
-        update={},
+        update={
+            "content": content,
+        },
     )
 
 
