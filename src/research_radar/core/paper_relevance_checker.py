@@ -1,6 +1,10 @@
 import logging
 from typing import Dict, List
 
+from langchain_core.messages import HumanMessage
+from research_radar.llm.client import get_chat_llm_client
+from research_radar.workflow.state import WorkflowState
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,11 +29,11 @@ class PaperRelevanceChecker:
         self.required_keywords = required_keywords
         self.min_match_threshold = min_match_threshold
         if metadata is not None:
-            self.paper_id = metadata.get("arxiv_id", "N/A")
+            self.paper_id = metadata.get("id", "N/A")
         else:
             self.paper_id = "N/A"
 
-    def check_relevance(self) -> bool:
+    def check_relevance(self, state: WorkflowState) -> bool:
         """
         Performs the relevance check.
 
@@ -38,13 +42,18 @@ class PaperRelevanceChecker:
         """
         if not self.metadata or not self.required_keywords:
             logger.warning(
-                f"Relevance Check Error for paper {self.paper_id}: Missing metadata or required keywords."
+                f"Relevance Check Error for paper %s: Missing metadata or required keywords.",
+                self.paper_id,
             )
             return False
 
         # --- STEP 1: Process and Normalize Keywords ---
 
         ai_keywords_list: List[str] = self.metadata.get("ai_keywords", [])
+
+        if not ai_keywords_list:
+            logger.info("No AI keywords found. Proceeding to LLM check.")
+            return self.llm_check(state)
 
         ai_keywords_set = {
             k.strip().lower() for k in ai_keywords_list if k and k.strip()
@@ -55,18 +64,62 @@ class PaperRelevanceChecker:
         # --- STEP 2: Find Intersection and Match Count ---
         intersection = ai_keywords_set.intersection(required_keywords_set)
         match_count = len(intersection)
-
         is_relevant = match_count >= self.min_match_threshold
 
-        # --- STEP 3: Logging and Result ---
-        logger.info(f"Paper {self.paper_id} Relevance Check Results:")
-        logger.info(f"\tRequired Keywords: {self.required_keywords}")
-        logger.info(f"\tPaper AI Keywords: {ai_keywords_set}")
-        logger.info(f"\tMatches Found: {match_count} ({', '.join(intersection)})")
-        logger.info(f"\tMinimum Required Matches: {self.min_match_threshold}")
-        logger.info(f"\tIs Relevant: {is_relevant}")
+        logger.info(
+            f"Paper %s Keyword Match: %s (Found: %s, Required: %s)",
+            self.paper_id,
+            is_relevant,
+            match_count,
+            self.min_match_threshold,
+        )
 
-        return is_relevant
+        if is_relevant:
+            return True
 
+        # --- STEP 2: LLM FALLBACK CHECK ---
+        logger.info("Keyword match failed. Proceeding to LLM fallback check.")
+        return self.llm_check(state)
 
-# End of paper_relevance_checker.py
+    def llm_check(self, state: WorkflowState) -> bool:
+        """
+        Performs the LLM relevance check (returns only True/False).
+        """
+        metadata = state.get("metadata")
+        required_keywords = state.get("required_keywords", [])
+        abstract_text = metadata.get("summary")
+        paper_id = state.get("paper_id")
+
+        if metadata is None or not abstract_text:
+            logger.warning(
+                f"LLM Check Error: Metadata or abstract missing for paper %s. Cannot proceed.",
+                paper_id,
+            )
+            return False
+
+        logger.info("Executing LLM relevance check using the paper's Abstract.")
+        prompt = (
+            f"You are a research paper filter specializing in **AI (Artificial Intelligence)**. "
+            f"Your goal is to determine if the given abstract is highly relevant to the user's research focus in this technical field. "
+            f"**Crucial Rule:** The paper is only relevant if the keywords (e.g., 'Layer Separation', 'Batch Processing') refer to **technical, computational, or scientific concepts**, NOT analogies (e.g., baking, cooking, or general industry practices). "
+            f"User Focus Keywords: {', '.join(required_keywords)}. "
+            f"Abstract: {abstract_text}. "
+            f"Answer STRICTLY with 'YES' or 'NO'."
+        )
+
+        try:
+            llm_client = get_chat_llm_client()
+            response = llm_client.invoke([HumanMessage(content=prompt)])
+            llm_decision_raw = response.content.strip().upper()
+
+        except Exception as e:
+            logger.error(
+                f"Ollama execution failed for paper %s. Error: %s", paper_id, e
+            )
+            llm_decision_raw = "NO"
+
+        llm_decision = llm_decision_raw == "YES"
+        logger.info(f"LLM Final Decision for paper %s: %s", paper_id, llm_decision)
+        return llm_decision
+
+    # End of paper_relevance_checker.py

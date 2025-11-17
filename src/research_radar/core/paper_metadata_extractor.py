@@ -25,20 +25,21 @@ class PaperMetadataExtractor:
         Extract metadata from the research paper.
         :return:
         """
-        logger.info(f"Extracting metadata for paper ID: {self.paper_id}")
+        logger.info(f"Extracting metadata for paper ID: %s", self.paper_id)
 
         # --- STEP 1: FETCHING DATA FROM THE API ---
         try:
-            response = requests.get(self.api_url)
+            response = requests.get(self.api_url, timeout=10)
             response.raise_for_status()
 
             raw_data = response.json()
 
             paper = raw_data.get("paper", raw_data)
 
-            if not (paper.get("id") or paper.get("arxivId")):
+            if not paper.get("id"):
                 logger.warning(
-                    f"Processing Error: API returned incomplete data for {self.paper_id}. Returning None."
+                    "Processing Error: API returned incomplete data for %s. Returning None.",
+                    self.paper_id,
                 )
                 return None
 
@@ -46,7 +47,9 @@ class PaperMetadataExtractor:
 
         except requests.exceptions.RequestException as e:
             logger.error(
-                f"Fetch Error: Could not retrieve data for {self.paper_id}. Error: {e}"
+                f"Fetch Error: Could not retrieve data for %s. Error: %s",
+                self.paper_id,
+                e,
             )
             return None
         # --- STEP 2: PROCESSING AND FLATTENING METADATA ---
@@ -78,7 +81,7 @@ class PaperMetadataExtractor:
         summary_text = paper.get("summary")
 
         paper_info: Dict[str, Any] = {
-            "arxiv_id": self.paper_id,
+            "id": self.paper_id,
             "title": paper.get("title"),
             "publishedAt": paper.get("publishedAt"),
             "submittedOnDailyAt": paper.get("submittedOnDailyAt")
