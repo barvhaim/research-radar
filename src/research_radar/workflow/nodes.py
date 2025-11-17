@@ -59,10 +59,9 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
 
     logger.info("Extracting paper content")
 
-    # TODO: Get paper PDF url from state
-
-    """ Demo document """
-    source = "logo.png"
+    source = state.metadata.get("arxiv_pdf_url")
+    if not source:
+        raise ValueError("Error: arxiv url is missing or None.")
 
     extractor = PaperContentExtractor(source)
     content = extractor.extract_content()
@@ -70,7 +69,6 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
     return Command(
         goto=ANALYZE_PAPER,
         update={
-            "status": WorkflowStatus.RUNNING.value,
             "content": content,
         },
     )

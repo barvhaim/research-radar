@@ -1,14 +1,11 @@
 import logging
-import pandas as pd
-from time import time
 from docling.document_converter import DocumentConverter
-from docling.datamodel.extraction import DoclingDocument
 
 logger = logging.getLogger(__name__)
 
 class PaperContentExtractor:
     """
-    A class to extract *content* from research paper.
+    A class to extract content from research paper.
     """
 
     def __init__(self, source: str):
@@ -25,16 +22,11 @@ class PaperContentExtractor:
         """ Downloads detection model and recognition model from library """
         converter = DocumentConverter()
         
-        print("Converting")
-        start_time = time()
         result = converter.convert(self.paper_url)
+        result_as_docling_document = result.document 
+        markdown_content = result_as_docling_document.export_to_markdown()
 
-        doc = result.document 
-        end_time = time() - start_time
-        print(f"Conversion done in {end_time:.2f} seconds")
-        
-        markdown_ver = doc.export_to_markdown()
-        
-        return markdown_ver
+        logger.info(f"Extraction finished for {self.paper_url}. Content length: {len(markdown_content)} chars.")
+        return markdown_content
     
 
