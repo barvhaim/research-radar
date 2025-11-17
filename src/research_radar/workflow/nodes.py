@@ -74,7 +74,7 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
     paper_id = state.get("paper_id")
 
     # Validation check
-    if not metadata or not required_keywords:
+    if not metadata:
         logger.warning(
             f"Filter Error: Missing metadata or required_keywords for paper %s. Ending workflow.",
             paper_id,
@@ -84,6 +84,15 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
             update={
                 "status": WorkflowStatus.FAILED.value,
                 "error": "Missing metadata or required keywords for relevance check.",
+            },
+        )
+    if not required_keywords:
+        logger.info(
+            f"No required keywords specified. Skipping relevance check.")
+        return Command(
+            goto=EXTRACT_PAPER_CONTENT,
+            update={
+                "status": WorkflowStatus.RUNNING.value,
             },
         )
 
