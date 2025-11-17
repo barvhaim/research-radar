@@ -22,5 +22,4 @@ class WorkflowState(TypedDict):
     metadata: Optional[Dict]
     status: WorkflowStatus
     error: Optional[str]
-    required_keywords: List[str]  
-    relevance_result: Optional[bool]
+    required_keywords: List[str]
