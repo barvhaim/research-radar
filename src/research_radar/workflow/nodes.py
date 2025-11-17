@@ -129,7 +129,7 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
 
     logger.info("Extracting paper content")
 
-    source = state.metadata.get("arxiv_pdf_url")
+    source = state.get("metadata",{}).get("arxiv_pdf_url")
     if not source:
         raise ValueError("Error: arxiv url is missing or None.")
 
