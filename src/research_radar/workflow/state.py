@@ -20,5 +20,6 @@ class WorkflowState(TypedDict):
     workflow_id: str
     paper_id: str
     metadata: Optional[Dict]
+    content: Optional[str]
     status: WorkflowStatus
     error: Optional[str]

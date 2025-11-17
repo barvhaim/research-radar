@@ -51,6 +51,7 @@ def create_initial_state(paper_id: str) -> dict:
         "workflow_id": str(uuid.uuid4()),
         "paper_id": paper_id,
         "metadata": None,
+        "content": None,
         "status": WorkflowStatus.PENDING.value,
         "error": None,
     }
