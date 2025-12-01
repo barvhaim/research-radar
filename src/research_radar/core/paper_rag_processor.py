@@ -1,135 +1,154 @@
 import logging
+import hashlib
 import os
 from enum import Enum
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
+from typing import Dict, Any
+
+from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
-from langchain_core.documents import Document
+from langchain_huggingface import HuggingFaceEmbeddings
 
 logger = logging.getLogger(__name__)
 
-# --- 1. CONFIGURATION LOGIC ---
+# PART 1: Provider configuration
 
 class EmbeddingsProvider(Enum):
-    HUGGINGFACE = "huggingface" # Local, CPU, Fast (Default)
-    OLLAMA = "ollama"           # Local, requires Ollama running
-    WATSONX = "watsonx"         # Remote, requires API Key
+    HUGGINGFACE = "huggingface"
+    OLLAMA = "ollama"
+    WATSONX = "watsonx"
 
-def get_embeddings_client():
+def _get_base_llm_settings(model_name: str, provider: EmbeddingsProvider) -> Dict:
     """
-    Factory function to get the correct embedding model based on env vars.
-    Currently supports: HUGGINGFACE.
+    Organizes connection details
     """
-    # Default to HUGGINGFACE
-    provider = os.getenv("EMBEDDINGS_PROVIDER", EmbeddingsProvider.HUGGINGFACE.value).lower()
+    if provider == EmbeddingsProvider.OLLAMA:
+        return {
+            "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+            "model": model_name,
+        }
+    elif provider == EmbeddingsProvider.WATSONX:
+        return {
+            "model_id": model_name,
+            "url": os.getenv("WATSONX_API_ENDPOINT", "https://us-south.ml.cloud.ibm.com"),
+            "project_id": os.getenv("WATSONX_PROJECT_ID"),
+            "apikey": os.getenv("WATSONX_API_KEY"),
+            "params": {
+                "truncate_input_tokens": int(os.getenv("WATSONX_TRUNCATE_INPUT_TOKENS", "3")),
+                "return_options": {"input_text": True},
+            },
+        }
+    return {}
+
+def get_embeddings_client() -> Any:
+    """
+    Picks tool
+    Default to HUGGINGFACE (local)
+    """ 
+    provider_str = os.getenv("EMBEDDINGS_PROVIDER", "huggingface").lower()
     
-    logger.info(f"Initializing Embeddings Provider: {provider.upper()}")
+    try:
+        provider = EmbeddingsProvider(provider_str)
+    except ValueError:
+        provider = EmbeddingsProvider.HUGGINGFACE
 
-    if provider == EmbeddingsProvider.HUGGINGFACE.value:
-        # This is the one we are using!
+    if provider == EmbeddingsProvider.HUGGINGFACE:
         return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-    elif provider == EmbeddingsProvider.OLLAMA.value:
-        # Placeholder for future use
-        # from langchain_ollama import OllamaEmbeddings
-        base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        model = os.getenv("EMBEDDINGS_MODEL_NAME", "mxbai-embed-large")
-        raise NotImplementedError("Ollama provider is not yet installed. Run 'uv add langchain-ollama' to enable.")
+    elif provider == EmbeddingsProvider.OLLAMA:
+        model_name = os.getenv("EMBEDDINGS_MODEL_NAME", "mxbai-embed-large")
+        from langchain_ollama import OllamaEmbeddings
+        return OllamaEmbeddings(**_get_base_llm_settings(model_name, provider))
 
-    elif provider == EmbeddingsProvider.WATSONX.value:
-        # Placeholder for future use
-        # from langchain_ibm import WatsonxEmbeddings
-        raise NotImplementedError("WatsonX provider is not yet installed. Run 'uv add langchain-ibm' to enable.")
+    elif provider == EmbeddingsProvider.WATSONX:
+        model_name = os.getenv("EMBEDDINGS_MODEL_NAME", "ibm/granite-embedding-107m-multilingual")
+        from langchain_ibm import WatsonxEmbeddings
+        settings = _get_base_llm_settings(model_name, provider)
+        return WatsonxEmbeddings(
+            model_id=settings["model_id"],
+            url=settings["url"],
+            apikey=settings["apikey"],
+            project_id=settings["project_id"],
+            params=settings["params"]
+        )
 
     raise ValueError(f"Unsupported embeddings provider: {provider}")
 
-
-# --- 2. THE MAIN PROCESSOR CLASS ---
+# PART 2: Processor
 
 class PaperRAGProcessor:
     """
-    Manages the RAG pipeline: Chunking, Embedding, and Indexing.
-    Runs In-Memory (no garbage files).
+    Manage RAG pipeline
     """
-
     def __init__(self):
         """
-        Initialize the processor components using the factory.
+        Call the provider, initiate DB
         """
-        # 1. Load the Embedding Model
-        try:
-            self.embeddings = get_embeddings_client()
-        except Exception as e:
-            logger.error(f"Failed to load embedding model: {e}")
-            raise e
+        self.embeddings = get_embeddings_client()
         
-        # 2. Connect to Vector Database (In-Memory)
-        logger.info("Initializing Ephemeral (In-Memory) Vector DB...")
-        try:
-            self.vector_store = Chroma(
-                collection_name="research_papers",
-                embedding_function=self.embeddings,
-                persist_directory=None  # <--- Forces RAM-only mode
-            )
-        except Exception as e:
-            logger.error(f"Failed to initialize ChromaDB: {e}")
-            raise e
-        
-        # 3. Define the Text Splitter
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800,
-            chunk_overlap=100,
-            separators=["\n\n", "\n", ". ", " ", ""]
+        logger.info("Initializing Ephemeral (In-Memory) ChromaDB...")
+        self.vector_store = Chroma(
+            collection_name="research_papers",
+            embedding_function=self.embeddings,
+            persist_directory=None 
         )
+
+    def _split_markdown(self, markdown_text: str):
+        """
+        Chunking logics
+        """
+        headers_to_split_on = [("#", "Header 1"), ("##", "Header 2")]
+        markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+        header_splits = markdown_splitter.split_text(markdown_text)
+
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=800, chunk_overlap=100
+        )
+        return text_splitter.split_documents(header_splits)
 
     def process_paper(self, paper_data: dict):
         """
-        Takes a paper object, splits it, and indexes it.
+        Process paper; receive an extracted paper, cut and embedd it.
         """
         paper_url = paper_data.get("paper_url", "unknown_url")
         text_content = paper_data.get("text_content")
-        metadata = paper_data.get("metadata", {})
-
+        
         if not text_content:
-            logger.warning(f"No content for {paper_url}. Skipping.")
+            logger.warning(f"No content for {paper_url}")
             return
 
-        logger.info(f"Starting RAG processing for: {paper_url}")
+        article_hash = hashlib.sha256(text_content.encode("utf-8")).hexdigest()
+        logger.info(f"Processing paper: {paper_url} (Hash: {article_hash[:8]}...)")
 
         try:
-            # 1. Chunking
-            chunks = self.text_splitter.split_text(text_content)
-            logger.info(f"Split text into {len(chunks)} chunks.")
+            chunks = self._split_markdown(text_content)
+            logger.info(f"Split into {len(chunks)} chunks.")
 
-            if not chunks:
-                logger.warning("Text splitting resulted in 0 chunks.")
-                return
+            for chunk in chunks:
+                chunk.metadata["source"] = paper_url
+                chunk.metadata["article_hash"] = article_hash 
 
-            # 2. Formatting
-            documents = []
-            for i, chunk in enumerate(chunks):
-                chunk_meta = metadata.copy()
-                chunk_meta.update({
-                    "source": paper_url,
-                    "chunk_index": i
-                })
-                doc = Document(page_content=chunk, metadata=chunk_meta)
-                documents.append(doc)
-
-            # 3. Indexing
-            self.vector_store.add_documents(documents)
-            logger.info(f"Successfully indexed {len(documents)} chunks to ChromaDB.")
+            self.vector_store.add_documents(chunks)
+            logger.info(f"Successfully indexed {len(chunks)} chunks.")
+            
+            return article_hash 
 
         except Exception as e:
-            logger.error(f"Failed to process paper {paper_url}: {e}")
+            logger.error(f"Failed to process paper: {e}")
+            return None
 
-    def search(self, query: str, k: int = 3):
+    def search(self, query: str, k: int = 3, article_hash: str = None):
         """
-        Search the database.
+        Runs vector search
         """
-        logger.info(f"Searching Vector DB for: '{query}'")
+
+        logger.info(f"Searching for: '{query}'")
+        
+        filter_dict = None
+        if article_hash:
+            filter_dict = {"article_hash": article_hash}
+
         try:
-            return self.vector_store.similarity_search(query, k=k)
+            return self.vector_store.similarity_search(query, k=k, filter=filter_dict)
         except Exception as e:
             logger.error(f"Search failed: {e}")
             return []
