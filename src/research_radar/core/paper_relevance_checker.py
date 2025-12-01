@@ -1,5 +1,7 @@
 import logging
 from typing import Dict, List
+from research_radar.llm.prompts import get_prompt
+from langchain_core.output_parsers import JsonOutputParser
 
 from langchain_core.messages import HumanMessage
 from research_radar.llm.client import get_chat_llm_client
@@ -98,28 +100,45 @@ class PaperRelevanceChecker:
             return False
 
         logger.info("Executing LLM relevance check using the paper's Abstract.")
-        prompt = (
-            f"You are a research paper filter specializing in **AI (Artificial Intelligence)**. "
-            f"Your goal is to determine if the given abstract is highly relevant to the user's research focus in this technical field. "
-            f"**Crucial Rule:** The paper is only relevant if the keywords (e.g., 'Layer Separation', 'Batch Processing') refer to **technical, computational, or scientific concepts**, NOT analogies (e.g., baking, cooking, or general industry practices). "
-            f"User Focus Keywords: {', '.join(required_keywords)}. "
-            f"Abstract: {abstract_text}. "
-            f"Answer STRICTLY with 'YES' or 'NO'."
-        )
+
+        template = get_prompt("paper_relevance_check")
+        template = template.get("paper_relevance_check")
+
+        if not template:
+            logger.error(
+                "LLM Check Error: Prompt template 'paper_relevance_check' not found."
+            )
+            return False
+
+        rendered_prompt = template.format(
+        required_keywords=", ".join(required_keywords),
+        abstract_text=abstract_text,
+    )
 
         try:
             llm_client = get_chat_llm_client()
-            response = llm_client.invoke([HumanMessage(content=prompt)])
-            llm_decision_raw = response.content.strip().upper()
+            response = llm_client.invoke([HumanMessage(content=rendered_prompt)])
+            raw_text = response.content.strip()
+
+            # Parse JSON
+            parser = JsonOutputParser()
+            parsed = parser.parse(raw_text)
+            is_relevant = bool(parsed.get("is_relevant"))
+            reason = parsed.get("reason", "")
+
+            logger.info(f"Reason: {reason}")
+            logger.info(f"Decision: {is_relevant}")
+
+
+            return is_relevant
 
         except Exception as e:
             logger.error(
-                f"Ollama execution failed for paper %s. Error: %s", paper_id, e
+                "LLM JSON relevance check failed for paper %s. Error: %s",
+                paper_id,
+                e,
             )
-            llm_decision_raw = "NO"
+            return False
 
-        llm_decision = llm_decision_raw == "YES"
-        logger.info(f"LLM Final Decision for paper %s: %s", paper_id, llm_decision)
-        return llm_decision
 
     # End of paper_relevance_checker.py
