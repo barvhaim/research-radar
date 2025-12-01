@@ -2,16 +2,17 @@ import logging
 from langgraph.graph import END
 from langgraph.types import Command
 
-
 from research_radar.workflow.state import WorkflowState, WorkflowStatus
 from research_radar.core.paper_metadata_extractor import PaperMetadataExtractor
 from research_radar.core.paper_relevance_checker import PaperRelevanceChecker
 from research_radar.core.paper_content_extractor import PaperContentExtractor
+from research_radar.core.paper_rag_processor import PaperRAGProcessor
 from research_radar.workflow.node_types import (
     EXTRACT_PAPER_CONTENT,
     ANALYZE_PAPER,
     PUBLISH_RESULTS,
     FILTER_PAPER_RELEVANCE,
+    EMBED_PAPER,
     EXTRACT_PAPER_INFORMATION,
 )
 
@@ -146,12 +147,57 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
     content = extractor.extract_content()
 
     return Command(
-        goto=ANALYZE_PAPER,
+        goto=EMBED_PAPER,
         update={
             "content": content,
         },
     )
 
+def embed_paper_node(state: WorkflowState) -> Command:
+    """
+    Node that embeds the extracted text into the vector database.
+
+    Args:
+        state (WorkflowState): The current state of the workflow.
+
+    Returns:
+        Command: A command to continue or end the workflow.
+    """
+
+    logger.info("Embedding paper content into RAG system")
+
+    # Get data
+    content = state.get("content")
+    metadata = state.get("metadata", {})
+    paper_id = state.get("paper_id")
+
+    # Prepare data for RAG processor
+    paper_data = {
+        "paper_url": metadata.get("arxiv_pdf_url", paper_id),
+        "text_content": content,
+        "metadata": metadata
+    }
+
+    # Run RAG processor
+    try:
+        rag_processor = PaperRAGProcessor()
+        paper_hash_ID = rag_processor.process_paper(paper_data)
+        
+        if not paper_hash_ID:
+             return Command(goto=END, update={"error": "Embedding failed."})
+
+        logger.info(f"Paper embedded successfully. Hash: {paper_hash_ID[:8]}")
+        
+        return Command(
+            goto=ANALYZE_PAPER,
+            update={
+                "paper_hash_ID": paper_hash_ID 
+            },
+        )
+        
+    except Exception as e:
+        logger.error(f"Embedding failed: {e}")
+        return Command(goto=END, update={"error": str(e)})
 
 def analyze_paper_node(state: WorkflowState) -> Command:
     """
