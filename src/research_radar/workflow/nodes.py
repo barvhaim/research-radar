@@ -87,8 +87,7 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
             },
         )
     if not required_keywords:
-        logger.info(
-            f"No required keywords specified. Skipping relevance check.")
+        logger.info(f"No required keywords specified. Skipping relevance check.")
         return Command(
             goto=EXTRACT_PAPER_CONTENT,
             update={
@@ -138,7 +137,7 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
 
     logger.info("Extracting paper content")
 
-    source = state.get("metadata",{}).get("arxiv_pdf_url")
+    source = state.get("metadata", {}).get("arxiv_pdf_url")
     if not source:
         raise ValueError("Error: arxiv url is missing or None.")
 
