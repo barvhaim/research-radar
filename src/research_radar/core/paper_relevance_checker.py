@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Dict, List
 
@@ -108,7 +109,10 @@ class PaperRelevanceChecker:
         )
 
         try:
-            llm_client = get_chat_llm_client()
+            llm_client = get_chat_llm_client(
+                model_name=os.getenv("LLM_MODEL"),
+                model_parameters={"temperature": 0, "max_tokens": 128},
+            )
             response = llm_client.invoke([HumanMessage(content=prompt)])
             llm_decision_raw = response.content.strip().upper()
 
