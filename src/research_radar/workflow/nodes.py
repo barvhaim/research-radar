@@ -88,8 +88,7 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
             },
         )
     if not required_keywords:
-        logger.info(
-            f"No required keywords specified. Skipping relevance check.")
+        logger.info(f"No required keywords specified. Skipping relevance check.")
         return Command(
             goto=EXTRACT_PAPER_CONTENT,
             update={
@@ -139,7 +138,7 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
 
     logger.info("Extracting paper content")
 
-    source = state.get("metadata",{}).get("arxiv_pdf_url")
+    source = state.get("metadata", {}).get("arxiv_pdf_url")
     if not source:
         raise ValueError("Error: arxiv url is missing or None.")
 
@@ -152,6 +151,7 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
             "content": content,
         },
     )
+
 
 def embed_paper_node(state: WorkflowState) -> Command:
     """
@@ -175,29 +175,28 @@ def embed_paper_node(state: WorkflowState) -> Command:
     paper_data = {
         "paper_url": metadata.get("arxiv_pdf_url", paper_id),
         "text_content": content,
-        "metadata": metadata
+        "metadata": metadata,
     }
 
     # Run RAG processor
     try:
         rag_processor = PaperRAGProcessor()
-        paper_hash_ID = rag_processor.process_paper(paper_data)
-        
-        if not paper_hash_ID:
-             return Command(goto=END, update={"error": "Embedding failed."})
+        paper_hash_id = rag_processor.process_paper(paper_data)
 
-        logger.info(f"Paper embedded successfully. Hash: {paper_hash_ID[:8]}")
-        
+        if not paper_hash_id:
+            return Command(goto=END, update={"error": "Embedding failed."})
+
+        logger.info("Paper embedded successfully. Hash: %s", paper_hash_id[:8])
+
         return Command(
             goto=ANALYZE_PAPER,
-            update={
-                "paper_hash_ID": paper_hash_ID 
-            },
+            update={"paper_hash_id": paper_hash_id},
         )
-        
+
     except Exception as e:
-        logger.error(f"Embedding failed: {e}")
+        logger.error("Embedding failed: %s", e)
         return Command(goto=END, update={"error": str(e)})
+
 
 def analyze_paper_node(state: WorkflowState) -> Command:
     """
