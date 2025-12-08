@@ -1,9 +1,10 @@
-import os
 import logging
 from typing import Dict, List
-
-from langchain_core.messages import HumanMessage
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableSequence
 from research_radar.llm.client import get_chat_llm_client
+from research_radar.llm.prompts import get_prompt
 from research_radar.workflow.state import WorkflowState
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ class PaperRelevanceChecker:
         """
         if not self.metadata or not self.required_keywords:
             logger.warning(
-                f"Relevance Check Error for paper %s: Missing metadata or required keywords.",
+                "Relevance Check Error for paper %s: Missing metadata or required keywords.",
                 self.paper_id,
             )
             return False
@@ -68,7 +69,7 @@ class PaperRelevanceChecker:
         is_relevant = match_count >= self.min_match_threshold
 
         logger.info(
-            f"Paper %s Keyword Match: %s (Found: %s, Required: %s)",
+            "Paper %s Keyword Match: %s (Found: %s, Required: %s)",
             self.paper_id,
             is_relevant,
             match_count,
@@ -82,48 +83,83 @@ class PaperRelevanceChecker:
         logger.info("Keyword match failed. Proceeding to LLM fallback check.")
         return self.llm_check(state)
 
+    @staticmethod
+    def _get_prompt_template_str() -> str:
+        """Fetch the prompt template string for paper relevance checking."""
+        template = get_prompt("paper_relevance_check")
+        template_str = template.get("paper_relevance_check")
+
+        if not template_str:
+            raise NotImplementedError(
+                "Prompt template 'paper_relevance_check' not found."
+            )
+
+        return template_str
+
+    def _build_llm_chain(self) -> RunnableSequence:
+        """
+        Build a LangChain RunnableSequence:
+            PromptTemplate -> Chat LLM -> JsonOutputParser
+        """
+        template_str = self._get_prompt_template_str()
+
+        prompt = PromptTemplate(
+            input_variables=["required_keywords", "abstract_text"],
+            template=template_str,
+        )
+
+        llm = get_chat_llm_client()
+        parser = JsonOutputParser()
+
+        # chaining: prompt | llm | parser
+        return prompt | llm | parser
+
     def llm_check(self, state: WorkflowState) -> bool:
         """
         Performs the LLM relevance check (returns only True/False).
         """
         metadata = state.get("metadata")
         required_keywords = state.get("required_keywords", [])
-        abstract_text = metadata.get("summary")
+        abstract_text = metadata.get("summary") if metadata else None
         paper_id = state.get("paper_id")
 
         if metadata is None or not abstract_text:
             logger.warning(
-                f"LLM Check Error: Metadata or abstract missing for paper %s. Cannot proceed.",
+                "LLM Check Error: Metadata or abstract missing for paper %s. Cannot proceed.",
                 paper_id,
             )
             return False
 
         logger.info("Executing LLM relevance check using the paper's Abstract.")
-        prompt = (
-            f"You are a research paper filter specializing in **AI (Artificial Intelligence)**. "
-            f"Your goal is to determine if the given abstract is highly relevant to the user's research focus in this technical field. "
-            f"**Crucial Rule:** The paper is only relevant if the keywords (e.g., 'Layer Separation', 'Batch Processing') refer to **technical, computational, or scientific concepts**, NOT analogies (e.g., baking, cooking, or general industry practices). "
-            f"User Focus Keywords: {', '.join(required_keywords)}. "
-            f"Abstract: {abstract_text}. "
-            f"Answer STRICTLY with 'YES' or 'NO'."
-        )
 
         try:
-            llm_client = get_chat_llm_client(
-                model_name=os.getenv("LLM_MODEL"),
-                model_parameters={"temperature": 0, "max_tokens": 128},
-            )
-            response = llm_client.invoke([HumanMessage(content=prompt)])
-            llm_decision_raw = response.content.strip().upper()
+            chain = self._build_llm_chain()
+        except NotImplementedError as exc:
+            logger.error("LLM Check Error: %s", exc)
+            return False
 
-        except Exception as e:
+        try:
+            result = chain.invoke(
+                {
+                    "required_keywords": ", ".join(required_keywords),
+                    "abstract_text": abstract_text,
+                }
+            )
+
+            is_relevant = bool(result.get("is_relevant"))
+            reason = result.get("reason", "")
+
+            logger.info("Reason: %s", reason)
+            logger.info("Decision: %s", is_relevant)
+
+            return is_relevant
+
+        except Exception as exc:
             logger.error(
-                f"Ollama execution failed for paper %s. Error: %s", paper_id, e
+                "LLM JSON relevance check failed for paper %s. Error: %s",
+                paper_id,
+                exc,
             )
-            llm_decision_raw = "NO"
-
-        llm_decision = llm_decision_raw == "YES"
-        logger.info(f"LLM Final Decision for paper %s: %s", paper_id, llm_decision)
-        return llm_decision
+            return False
 
     # End of paper_relevance_checker.py
