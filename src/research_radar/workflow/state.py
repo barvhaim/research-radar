@@ -24,3 +24,5 @@ class WorkflowState(TypedDict):
     status: WorkflowStatus
     error: Optional[str]
     required_keywords: List[str]
+    paper_hash_id: Optional[str]
+    analysis: Optional[Dict[str, str]]

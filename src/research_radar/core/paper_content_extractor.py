@@ -45,6 +45,10 @@ class PaperContentExtractor:
         markdown_content = result_as_docling_document.export_to_markdown()
 
         logger.info(
-            f"Extraction finished for {self.paper_url}. Content length: {len(markdown_content)} chars."
+            logger.info(
+                "Extraction finished for %s. Content length: %d chars.",
+                self.paper_url,
+                len(markdown_content),
+            )
         )
         return markdown_content

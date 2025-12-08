@@ -1,0 +1,13 @@
+paper_analysis: |
+  You are a senior research assistant. 
+  Answer the following question based ONLY on the provided context.
+  
+  ---
+  CONTEXT FROM PAPER:
+  {context}
+  ---
+
+  QUESTION: 
+  {question}
+
+  ANSWER (Be concise, direct, and professional):
