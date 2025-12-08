@@ -58,7 +58,9 @@ def get_embeddings_client() -> Any:
     try:
         provider = EmbeddingsProvider(provider_str)
     except ValueError:
-        logger.warning("Unknown provider '%s', defaulting to HuggingFace.", provider_str)
+        logger.warning(
+            "Unknown provider '%s', defaulting to HuggingFace.", provider_str
+        )
         provider = EmbeddingsProvider.HUGGINGFACE
 
     logger.info("Initializing Embeddings Provider: %s", provider.name)

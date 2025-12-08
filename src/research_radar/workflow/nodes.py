@@ -7,6 +7,7 @@ from research_radar.core.paper_metadata_extractor import PaperMetadataExtractor
 from research_radar.core.paper_relevance_checker import PaperRelevanceChecker
 from research_radar.core.paper_content_extractor import PaperContentExtractor
 from research_radar.core.paper_rag_processor import PaperRAGProcessor
+from research_radar.core.paper_analyzer import PaperAnalyzer
 from research_radar.workflow.node_types import (
     EXTRACT_PAPER_CONTENT,
     ANALYZE_PAPER,
@@ -16,7 +17,7 @@ from research_radar.workflow.node_types import (
     EXTRACT_PAPER_INFORMATION,
 )
 
-rag_processor = PaperRAGProcessor() # Global instance to manage RAG pipline
+rag_processor = PaperRAGProcessor()  # Global instance to manage RAG pipline
 
 logger = logging.getLogger(__name__)
 
@@ -202,8 +203,8 @@ def embed_paper_node(state: WorkflowState) -> Command:
 def analyze_paper_node(state: WorkflowState) -> Command:
     """
     Node that performs paper analysis.
-    :param state: initial_summary
-    :return: 
+    :param state: analysis
+    :return:
         command: A command to generate an initial summary of paper.
     """
 
@@ -214,22 +215,21 @@ def analyze_paper_node(state: WorkflowState) -> Command:
     if not paper_hash_id:
         logger.warning("Received NO paper hash ID. Skipping analysis.")
         return Command(
-            goto=PUBLISH_RESULTS, 
-            update={"error": "Analysis skipped (No RAG data)."}
+            goto=PUBLISH_RESULTS, update={"error": "Analysis skipped (No RAG data)."}
         )
 
-    analyzer = process_paper(rag_processor)
-    
+    analyzer = PaperAnalyzer(rag_processor)
+
     try:
-        initial_summary = analyzer.generate_initial_summary(paper_hash_id)
-        
+        analysis = analyzer.generate_analysis(paper_hash_id)
+
         return Command(
             goto=PUBLISH_RESULTS,
             update={
-                "initial_summary": initial_summary,
+                "analysis": analysis,
             },
         )
-        
+
     except Exception as e:
         logger.error("Analysis failed: %s", e)
         return Command(goto=END, update={"error": str(e)})

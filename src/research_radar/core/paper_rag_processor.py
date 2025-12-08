@@ -42,7 +42,7 @@ class PaperRAGProcessor:
         header_splits = markdown_splitter.split_text(markdown_text)
 
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800, chunk_overlap=100
+            chunk_size=1500, chunk_overlap=300
         )
         return text_splitter.split_documents(header_splits)
 
