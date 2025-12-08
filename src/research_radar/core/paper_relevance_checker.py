@@ -1,4 +1,3 @@
-import os
 import logging
 from typing import Dict, List
 from langchain_core.output_parsers import JsonOutputParser
@@ -155,7 +154,7 @@ class PaperRelevanceChecker:
 
             return is_relevant
 
-        except Exception as exc:  
+        except Exception as exc:
             logger.error(
                 "LLM JSON relevance check failed for paper %s. Error: %s",
                 paper_id,
@@ -164,4 +163,3 @@ class PaperRelevanceChecker:
             return False
 
     # End of paper_relevance_checker.py
-
