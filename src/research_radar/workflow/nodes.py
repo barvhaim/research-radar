@@ -16,6 +16,8 @@ from research_radar.workflow.node_types import (
     EXTRACT_PAPER_INFORMATION,
 )
 
+rag_processor = PaperRAGProcessor() # Global instance to manage RAG pipline
+
 logger = logging.getLogger(__name__)
 
 
@@ -180,7 +182,6 @@ def embed_paper_node(state: WorkflowState) -> Command:
 
     # Run RAG processor
     try:
-        rag_processor = PaperRAGProcessor()
         paper_hash_id = rag_processor.process_paper(paper_data)
 
         if not paper_hash_id:
@@ -201,17 +202,37 @@ def embed_paper_node(state: WorkflowState) -> Command:
 def analyze_paper_node(state: WorkflowState) -> Command:
     """
     Node that performs paper analysis.
-    :param state:
-    :return:
+    :param state: initial_summary
+    :return: 
+        command: A command to generate an initial summary of paper.
     """
 
     logger.info("Analyzing paper content")
 
-    # TODO: Implement paper analysis logic
-    return Command(
-        goto=PUBLISH_RESULTS,
-        update={},
-    )
+    paper_hash_id = state.get("paper_hash_id")
+
+    if not paper_hash_id:
+        logger.warning("Received NO paper hash ID. Skipping analysis.")
+        return Command(
+            goto=PUBLISH_RESULTS, 
+            update={"error": "Analysis skipped (No RAG data)."}
+        )
+
+    analyzer = process_paper(rag_processor)
+    
+    try:
+        initial_summary = analyzer.generate_initial_summary(paper_hash_id)
+        
+        return Command(
+            goto=PUBLISH_RESULTS,
+            update={
+                "initial_summary": initial_summary,
+            },
+        )
+        
+    except Exception as e:
+        logger.error("Analysis failed: %s", e)
+        return Command(goto=END, update={"error": str(e)})
 
 
 def publish_results_node(state: WorkflowState) -> Command:
