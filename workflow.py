@@ -8,14 +8,15 @@ Usage:
 
 import uuid
 import logging
-from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from dotenv import load_dotenv
 from research_radar.workflow.graph import build_graph
 from research_radar.workflow.state import WorkflowStatus
 
 
+load_dotenv()
 logger = logging.getLogger(__name__)
 console = Console()
 
@@ -54,17 +55,19 @@ def create_initial_state(paper_id: str) -> dict:
         "content": None,
         "status": WorkflowStatus.PENDING.value,
         "error": None,
-        "required_keywords": ["large language models (LLMs)",
-        "instruction following (IF)",
-        "multi-turn instructions",
-        "system-prompted instructions",
-        "human-annotated benchmarks",
-        "rubrics",
-        "LLMs",
-        "commonsense reasoning",
-        "Global PIQA",
-        "language varieties",
-        "culturally-specific elements",],
+        "required_keywords": [
+            "large language models (LLMs)",
+            "instruction following (IF)",
+            "multi-turn instructions",
+            "system-prompted instructions",
+            "human-annotated benchmarks",
+            "rubrics",
+            "LLMs",
+            "commonsense reasoning",
+            "Global PIQA",
+            "language varieties",
+            "culturally-specific elements",
+        ],
     }
 
 
