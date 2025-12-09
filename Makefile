@@ -1,5 +1,4 @@
-.PHONY: format lint help install run mcp-server mcp-test
-
+.PHONY: format lint help install run
 # Format Python code with black
 format:
 	uv run black .
