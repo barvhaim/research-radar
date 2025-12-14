@@ -6,7 +6,6 @@ from langchain_text_splitters import (
     RecursiveCharacterTextSplitter,
 )
 from langchain_chroma import Chroma
-from langchain_core.documents import Document
 
 from research_radar.core.embeddings.client.factory import get_embeddings_client
 

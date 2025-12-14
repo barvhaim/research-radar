@@ -49,7 +49,7 @@ def _get_base_llm_settings(model_name: str, provider: EmbeddingsProvider) -> Dic
 def get_embeddings_client() -> Any:
     """
     Picks tool, need to be changed in .env:
-        - Default to HUGGINGFACE (local)
+        - EMBEDDINGS_PROVIDER=huggingface
         - EMBEDDINGS_PROVIDER=ollama
         - EMBEDDINGS_PROVIDER=watsonx
     """
