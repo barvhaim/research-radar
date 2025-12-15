@@ -6,6 +6,7 @@ from langchain_text_splitters import (
     RecursiveCharacterTextSplitter,
 )
 from langchain_chroma import Chroma
+from langsmith import traceable
 
 from research_radar.core.embeddings.client.factory import get_embeddings_client
 
@@ -45,6 +46,7 @@ class PaperRAGProcessor:
         )
         return text_splitter.split_documents(header_splits)
 
+    @traceable(run_type="chain", name="index_paper")
     def process_paper(self, paper_data: dict):
         """
         Process paper; receive an extracted paper, cut and embedd it.
@@ -75,7 +77,8 @@ class PaperRAGProcessor:
         except Exception as e:
             logger.error("Failed to process paper: %s", e)
             return None
-
+        
+    @traceable(run_type="retriever", name="retrieve_chunks")
     def search(self, query: str, k: int = 3, article_hash: str = None):
         """
         Runs vector search
