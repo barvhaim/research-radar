@@ -153,7 +153,9 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
     )
 
 
-def analyze_paper_node(state: WorkflowState) -> Command:  # pylint: disable=unused-argument
+def analyze_paper_node(
+    state: WorkflowState,
+) -> Command:  # pylint: disable=unused-argument
     """
     Node that performs paper analysis.
     :param state:
@@ -169,7 +171,9 @@ def analyze_paper_node(state: WorkflowState) -> Command:  # pylint: disable=unus
     )
 
 
-def publish_results_node(state: WorkflowState) -> Command:  # pylint: disable=unused-argument
+def publish_results_node(
+    state: WorkflowState,
+) -> Command:  # pylint: disable=unused-argument
     """
     Node that publishes the results of the analysis.
     :param state:
