@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Dict, List
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
@@ -108,11 +109,15 @@ class PaperRelevanceChecker:
             template=template_str,
         )
 
-        llm = get_chat_llm_client()
-        parser = JsonOutputParser()
+        llm = get_chat_llm_client(
+            model_name=os.getenv("LLM_MODEL"),
+            model_parameters={
+                "temperature": 0,
+                "max_tokens": 1024,
+            },
+        )
 
-        # chaining: prompt | llm | parser
-        return prompt | llm | parser
+        return prompt | llm | JsonOutputParser()
 
     def llm_check(self, state: WorkflowState) -> bool:
         """

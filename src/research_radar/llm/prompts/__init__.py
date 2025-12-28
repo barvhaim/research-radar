@@ -54,4 +54,3 @@ def get_prompt(prompt_file: str = None) -> Dict[str, Any]:
             print(f"Warning: Failed to load {yaml_file}: {e}")
 
     return prompts
-

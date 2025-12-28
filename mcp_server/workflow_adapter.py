@@ -7,18 +7,45 @@ a summary for a given paper ID.
 """
 
 from typing import Any, Dict
+import uuid
 import logging
-import sys
-from pathlib import Path
-
-# Add project root to path to import workflow module
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
-
 from research_radar.workflow.graph import build_graph
-from workflow import create_initial_state 
+from research_radar.workflow.state import WorkflowStatus
+
 
 logger = logging.getLogger(__name__)
+
+
+def create_initial_state(paper_id: str) -> dict:
+    """Create initial workflow state.
+
+    Args:
+        paper_id: ID of paper.
+
+    Returns:
+        Initial workflow state dictionary.
+    """
+    return {
+        "workflow_id": str(uuid.uuid4()),
+        "paper_id": paper_id,
+        "metadata": None,
+        "content": None,
+        "status": WorkflowStatus.PENDING.value,
+        "error": None,
+        "required_keywords": [
+            "large language models (LLMs)",
+            "instruction following (IF)",
+            "multi-turn instructions",
+            "system-prompted instructions",
+            "human-annotated benchmarks",
+            "rubrics",
+            "LLMs",
+            "commonsense reasoning",
+            "Global PIQA",
+            "language varieties",
+            "culturally-specific elements",
+        ],
+    }
 
 
 def run_workflow_for_paper(paper_id: str) -> Dict[str, Any]:

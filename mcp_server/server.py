@@ -3,6 +3,7 @@ from mcp_server.workflow_adapter import run_workflow_for_paper
 
 mcp = FastMCP("research-radar-mcp")
 
+
 @mcp.tool()
 async def summarize_paper(paper_id: str) -> dict:
     """
@@ -10,7 +11,7 @@ async def summarize_paper(paper_id: str) -> dict:
     and return the final summary.
 
     Args:
-        paper_id: The Hugging Face paper ID 
+        paper_id: The Hugging Face paper ID
 
     Returns:
         A dictionary with paper_id and summary
