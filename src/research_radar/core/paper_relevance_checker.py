@@ -1,3 +1,5 @@
+"""Module for checking paper relevance based on keywords and LLM analysis."""
+
 import logging
 import os
 from typing import Dict, List
@@ -159,7 +161,7 @@ class PaperRelevanceChecker:
 
             return is_relevant
 
-        except Exception as exc:
+        except (ValueError, KeyError, TypeError) as exc:
             logger.error(
                 "LLM JSON relevance check failed for paper %s. Error: %s",
                 paper_id,

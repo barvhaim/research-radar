@@ -1,3 +1,5 @@
+"""Module defining workflow state types and status enums."""
+
 from enum import Enum
 from typing import Optional, Dict, List
 from typing_extensions import TypedDict

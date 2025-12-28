@@ -1,3 +1,5 @@
+"""Module defining the workflow graph for paper processing."""
+
 from langgraph.graph import StateGraph
 from research_radar.workflow.state import WorkflowState
 from research_radar.workflow.node_types import (
@@ -18,6 +20,7 @@ from research_radar.workflow.nodes import (
 
 
 def build_graph():
+    """Build and compile the paper processing workflow graph."""
     flow = StateGraph(WorkflowState)
 
     flow.add_node(EXTRACT_PAPER_INFORMATION, extract_paper_information_node)
