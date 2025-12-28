@@ -11,6 +11,7 @@ import logging
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich.markdown import Markdown
 from dotenv import load_dotenv
 from research_radar.workflow.graph import build_graph
 from research_radar.workflow.state import WorkflowStatus
@@ -107,6 +108,33 @@ def build_results_table(result: dict) -> Table:
     return table
 
 
+def print_analysis(result: dict):
+    """Print the detailed Q&A analysis from the AI."""
+    analysis = result.get("analysis")
+
+    if not analysis:
+        console.print("\n[dim]No analysis text found in results.[/dim]")
+        return
+
+    console.print("\n[bold cyan]AI Analysis Results[/bold cyan]")
+    console.print("=" * 40)
+
+    if isinstance(analysis, dict):
+        for question, answer in analysis.items():
+            console.print(
+                Panel(
+                    Markdown(str(answer)),
+                    title=f"[bold yellow]Q: {question}[/bold yellow]",
+                    border_style="green",
+                    expand=False,
+                )
+            )
+            console.print("")
+
+    else:
+        console.print(analysis)
+
+
 def print_results(result: dict):
     """Print workflow results.
 
@@ -115,6 +143,9 @@ def print_results(result: dict):
     """
     table = build_results_table(result)
     console.print("\n", table)
+
+    print_analysis(result)
+
     console.print(
         f"\n[bold green]✓[/bold green] Workflow finished for paper [blue]{result['paper_id']}[/blue]\n"
     )
