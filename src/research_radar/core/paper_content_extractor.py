@@ -1,3 +1,5 @@
+"""Module for extracting content from research papers."""
+
 import logging
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.base_models import InputFormat
@@ -7,7 +9,7 @@ from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 logger = logging.getLogger(__name__)
 
 
-class PaperContentExtractor:
+class PaperContentExtractor:  # pylint: disable=too-few-public-methods
     """
     A class to extract content from research paper.
     """
@@ -21,7 +23,7 @@ class PaperContentExtractor:
         :return: Markdown
         """
 
-        logger.info(f"Extracting content for paper ID: {self.paper_url}")
+        logger.info("Extracting content for paper ID: %s", self.paper_url)
 
         pipeline_options = PdfPipelineOptions()
         pipeline_options.do_ocr = False  # Disable OCR
@@ -31,7 +33,7 @@ class PaperContentExtractor:
         )
         pipeline_options.generate_picture_images = False  # Disable figures extraction
 
-        """ Downloads detection model and recognition model from library """
+        # Downloads detection model and recognition model from library
         converter = DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(
@@ -45,6 +47,8 @@ class PaperContentExtractor:
         markdown_content = result_as_docling_document.export_to_markdown()
 
         logger.info(
-            f"Extraction finished for {self.paper_url}. Content length: {len(markdown_content)} chars."
+            "Extraction finished for %s. Content length: %d chars.",
+            self.paper_url,
+            len(markdown_content),
         )
         return markdown_content

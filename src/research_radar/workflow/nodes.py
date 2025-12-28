@@ -1,3 +1,5 @@
+"""Module containing workflow node implementations for paper processing."""
+
 import logging
 from langgraph.graph import END
 from langgraph.types import Command
@@ -12,7 +14,6 @@ from research_radar.workflow.node_types import (
     ANALYZE_PAPER,
     PUBLISH_RESULTS,
     FILTER_PAPER_RELEVANCE,
-    EXTRACT_PAPER_INFORMATION,
 )
 
 logger = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
     # Validation check
     if not metadata:
         logger.warning(
-            f"Filter Error: Missing metadata or required_keywords for paper %s. Ending workflow.",
+            "Filter Error: Missing metadata or required_keywords for paper %s. Ending workflow.",
             paper_id,
         )
         return Command(
@@ -87,7 +88,7 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
             },
         )
     if not required_keywords:
-        logger.info(f"No required keywords specified. Skipping relevance check.")
+        logger.info("No required keywords specified. Skipping relevance check.")
         return Command(
             goto=EXTRACT_PAPER_CONTENT,
             update={
@@ -105,14 +106,14 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
     if is_relevant:
         next_node = EXTRACT_PAPER_CONTENT
         logger.info(
-            f"Paper %s: Determined relevant. Continuing to content extraction.",
+            "Paper %s: Determined relevant. Continuing to content extraction.",
             paper_id,
         )
         status = WorkflowStatus.RUNNING.value
     else:
         next_node = END
         logger.warning(
-            f"Paper %s: Not relevant after all checks. Ending workflow.", paper_id
+            "Paper %s: Not relevant after all checks. Ending workflow.", paper_id
         )
         status = WorkflowStatus.COMPLETED.value
 
@@ -152,7 +153,9 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
     )
 
 
-def analyze_paper_node(state: WorkflowState) -> Command:
+def analyze_paper_node(
+    state: WorkflowState,
+) -> Command:  # pylint: disable=unused-argument
     """
     Node that performs paper analysis.
     :param state:
@@ -168,7 +171,9 @@ def analyze_paper_node(state: WorkflowState) -> Command:
     )
 
 
-def publish_results_node(state: WorkflowState) -> Command:
+def publish_results_node(
+    state: WorkflowState,
+) -> Command:  # pylint: disable=unused-argument
     """
     Node that publishes the results of the analysis.
     :param state:
