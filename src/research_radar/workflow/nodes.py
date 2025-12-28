@@ -3,7 +3,6 @@
 import logging
 from langgraph.graph import END
 from langgraph.types import Command
-
 from research_radar.workflow.state import WorkflowState, WorkflowStatus
 from research_radar.core.paper_metadata_extractor import PaperMetadataExtractor
 from research_radar.core.paper_relevance_checker import PaperRelevanceChecker
@@ -158,9 +157,6 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
     )
 
 
-def analyze_paper_node(
-    state: WorkflowState,
-) -> Command:  # pylint: disable=unused-argument
 def embed_paper_node(state: WorkflowState) -> Command:
     """
     Node that embeds the extracted text into the vector database.
@@ -205,7 +201,9 @@ def embed_paper_node(state: WorkflowState) -> Command:
         return Command(goto=END, update={"error": str(e)})
 
 
-def analyze_paper_node(state: WorkflowState) -> Command:
+def analyze_paper_node(
+    state: WorkflowState,
+) -> Command:  # pylint: disable=unused-argument
     """
     Node that performs paper analysis.
     :param state: analysis

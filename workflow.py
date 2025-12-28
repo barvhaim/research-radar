@@ -107,6 +107,7 @@ def build_results_table(result: dict) -> Table:
 
     return table
 
+
 def print_analysis(result: dict):
     """Print the detailed Q&A analysis from the AI."""
     analysis = result.get("analysis")
@@ -120,16 +121,19 @@ def print_analysis(result: dict):
 
     if isinstance(analysis, dict):
         for question, answer in analysis.items():
-            console.print(Panel(
-                Markdown(str(answer)), 
-                title=f"[bold yellow]Q: {question}[/bold yellow]",
-                border_style="green",
-                expand=False
-            ))
-            console.print("") 
-    
+            console.print(
+                Panel(
+                    Markdown(str(answer)),
+                    title=f"[bold yellow]Q: {question}[/bold yellow]",
+                    border_style="green",
+                    expand=False,
+                )
+            )
+            console.print("")
+
     else:
         console.print(analysis)
+
 
 def print_results(result: dict):
     """Print workflow results.
