@@ -1,5 +1,6 @@
 import logging
-from typing import Dict, List
+import os
+from typing import Dict
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableSequence
@@ -46,7 +47,13 @@ class PaperAnalyzer:
         )
 
         # Use the centralized factory
-        llm = get_chat_llm_client()
+        llm = get_chat_llm_client(
+            model_name=os.getenv("LLM_MODEL"),
+            model_parameters={
+                "temperature": 0,
+                "max_tokens": 1024,
+            },
+        )
         parser = StrOutputParser()
 
         return prompt | llm | parser
@@ -56,7 +63,7 @@ class PaperAnalyzer:
         Runs the analysis loop.
         """
         results = {}
-        logger.info("Starting intial summary.")
+        logger.info("Starting initial summary.")
 
         # Build chain once
         try:
