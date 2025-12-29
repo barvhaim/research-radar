@@ -222,11 +222,13 @@ def analyze_paper_node(state: WorkflowState) -> Command:
 
     try:
         analysis = analyzer.generate_analysis(paper_hash_id)
+        summary = analyzer.generate_summary(analysis)
 
         return Command(
             goto=PUBLISH_RESULTS,
             update={
                 "analysis": analysis,
+                "summary": summary,
             },
         )
 

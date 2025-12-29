@@ -26,3 +26,4 @@ class WorkflowState(TypedDict):
     required_keywords: List[str]
     paper_hash_id: Optional[str]
     analysis: Optional[Dict[str, str]]
+    summary: Optional[str]

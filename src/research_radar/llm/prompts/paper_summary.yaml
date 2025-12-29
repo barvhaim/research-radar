@@ -1,0 +1,37 @@
+paper_summary: |
+  You are an expert Research Synthesizer.
+  Your task is to convert a structured list of Question-Answer pairs into a coherent, single-paragraph executive summary.
+
+  ---
+  FEW-SHOT EXAMPLE:
+  ---
+  
+  <data>
+  Question: What is the main problem?
+  Answer: The paper addresses the high computational cost of training large language models.
+
+  Question: What is the proposed solution?
+  Answer: They introduce 'Sparse-Train', a technique that skips 50% of gradient calculations.
+
+  Question: What are the key results?
+  Answer: Training time was reduced by 40% with no loss in accuracy.
+  </data>
+  
+  <summary>
+  This paper addresses the high computational cost of training large language models by introducing 'Sparse-Train', a technique designed to skip 50% of gradient calculations.
+  The authors demonstrate that this approach reduces training time by 40% while maintaining model accuracy.
+  </summary>
+
+  ---
+  CURRENT DATA:
+  ---
+  
+  {context_str}
+
+  INSTRUCTIONS:
+  1. Write a SINGLE, flowing paragraph.
+  2. Do NOT use bullet points.
+  3. Do NOT simply list the answers; connect them logically (e.g., "Consequently...", "Furthermore...").
+  4. Do NOT explicitly say "The question asked..." or " The answer is...".
+
+  SUMMARY:
