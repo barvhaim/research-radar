@@ -1,4 +1,3 @@
-.PHONY: format lint help install run
 # Format Python code with black
 format:
 	uv run black .
@@ -19,6 +18,9 @@ run:
 mcp-server:
 	uv run python -m mcp_server.server
 
+# Run the Gradio UI web interface
+ui:
+	uv run python -m research_radar.ui.app
 
 # Display help information
 help:
@@ -27,5 +29,6 @@ help:
 	@echo "  make lint        - Lint code with pylint"
 	@echo "  make install     - Install dependencies with uv"
 	@echo "  make run         - Run the main workflow"
+	@echo "  make ui          - Run the Gradio UI web interface (port 7860)"
 	@echo "  make mcp-server  - Run the MCP Server (SSE on port 5555)"
 	@echo "  make help        - Display this help message"
