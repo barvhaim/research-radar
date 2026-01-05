@@ -28,12 +28,13 @@ def format_analysis(analysis: dict) -> str:
     return "\n---\n\n".join(formatted_parts)
 
 
-def analyze_paper(paper_id: str) -> tuple[str, str]:
+def analyze_paper(paper_id: str, selected_keywords: list) -> tuple[str, str]:
     """
     Analyze a paper and return the results.
 
     Args:
         paper_id: Hugging Face paper ID (e.g., "2510.24081")
+        selected_keywords: List of selected keywords for filtering
 
     Returns:
         Tuple of (status_message, summary_text)
@@ -42,10 +43,14 @@ def analyze_paper(paper_id: str) -> tuple[str, str]:
         return "Error", "Please enter a valid paper ID"
 
     try:
-        logger.info(f"Starting analysis for paper: {paper_id}")
+        logger.info(
+            f"Starting analysis for paper: {paper_id} with keywords: {selected_keywords}"
+        )
 
-        # Call workflow adapter directly
-        result = run_workflow_for_paper(paper_id.strip())
+        # Call workflow adapter directly with selected keywords
+        result = run_workflow_for_paper(
+            paper_id.strip(), required_keywords=selected_keywords
+        )
 
         paper_id_result = result.get("paper_id", paper_id)
 
@@ -70,13 +75,62 @@ def analyze_paper(paper_id: str) -> tuple[str, str]:
 def create_ui():
     """Create and configure the Gradio interface."""
 
+    # Available keywords for filtering (35 most relevant)
+    available_keywords = [
+        # Core Concepts
+        "Large Language Models (LLMs)",
+        "Transformers",
+        "Attention Mechanisms",
+        "Neural Networks",
+        # Training Methods
+        "Fine-tuning",
+        "Reinforcement Learning",
+        "Direct Preference Optimization (DPO)",
+        "Supervised Learning",
+        "Transfer Learning",
+        # Reasoning & Prompting
+        "Chain-of-Thought",
+        "Reasoning",
+        "Prompting",
+        "In-Context Learning",
+        "Few-Shot Learning",
+        # Retrieval & Knowledge
+        "RAG (Retrieval-Augmented Generation)",
+        "Knowledge Retrieval",
+        "Semantic Search",
+        # Instructions & Evaluation
+        "Instruction Following",
+        "Benchmarks",
+        "Evaluation",
+        "Human Feedback",
+        # Memory & Context
+        "Long Context",
+        "Memory",
+        "Context Window",
+        # Information Theory
+        "Entropy",
+        "KL-divergence",
+        "Uncertainty",
+        # Tasks & Applications
+        "Code Generation",
+        "Question Answering",
+        "Summarization",
+        "Translation",
+        # Multimodal
+        "Multimodal",
+        "Vision-Language",
+        # Safety & Alignment
+        "Alignment",
+        "Safety",
+    ]
+
     with gr.Blocks(title="Research Radar - Paper Analysis") as demo:
         gr.Markdown(
             """
             # Research Radar - Paper Analysis
 
             Analyze research papers using AI-powered workflow.
-            Enter a Hugging Face paper ID to get started.
+            Enter a Hugging Face paper ID and select relevant keywords to filter papers.
 
             **Example Paper ID:** `2510.24081`
             """
@@ -89,12 +143,15 @@ def create_ui():
                     placeholder="Enter Hugging Face paper ID (e.g., 2510.24081)",
                     lines=1,
                 )
-            with gr.Column(scale=1):
-                analyze_btn = gr.Button(
-                    "Analyze Paper",
-                    variant="primary",
-                    size="lg"
+
+                keywords_input = gr.CheckboxGroup(
+                    choices=available_keywords,
+                    label="Select Keywords (optional - leave empty to skip filtering)",
+                    value=[],  # Default: none selected
                 )
+
+            with gr.Column(scale=1):
+                analyze_btn = gr.Button("Analyze Paper", variant="primary", size="lg")
 
         status_output = gr.Textbox(
             label="Status",
@@ -111,14 +168,14 @@ def create_ui():
         # Connect the button click to the analysis function
         analyze_btn.click(
             fn=analyze_paper,
-            inputs=[paper_id_input],
+            inputs=[paper_id_input, keywords_input],
             outputs=[status_output, summary_output],
         )
 
         # Allow Enter key to trigger analysis
         paper_id_input.submit(
             fn=analyze_paper,
-            inputs=[paper_id_input],
+            inputs=[paper_id_input, keywords_input],
             outputs=[status_output, summary_output],
         )
 
@@ -143,7 +200,6 @@ def main():
         share=False,
         show_error=True,
         theme=gr.themes.Soft(),
-        show_api=False, 
     )
 
 
