@@ -1,3 +1,5 @@
+"""Constants defining workflow node type identifiers."""
+
 EXTRACT_PAPER_INFORMATION = "extract_paper_information"
 EXTRACT_YOUTUBE_INFORMATION = "extract_youtube_information"
 FILTER_PAPER_RELEVANCE = "filter_paper_relevance"

@@ -1,3 +1,5 @@
+"""Module for extracting metadata from research papers via HuggingFace API."""
+
 import logging
 from typing import Dict, Optional, Any
 import requests
@@ -6,7 +8,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 
-class PaperMetadataExtractor:
+class PaperMetadataExtractor:  # pylint: disable=too-few-public-methods
     """
     A class to extract metadata from research paper.
     """
@@ -20,12 +22,12 @@ class PaperMetadataExtractor:
         self.paper_id = paper_id
         self.api_url = f"{self.HUGGINGFACE_SINGLE_PAPER_API_BASE_URL}{paper_id}"
 
-    def extract_metadata(self) -> Optional[Dict]:
+    def extract_metadata(self) -> Optional[Dict]:  # pylint: disable=too-many-locals
         """
         Extract metadata from the research paper.
         :return:
         """
-        logger.info(f"Extracting metadata for paper ID: %s", self.paper_id)
+        logger.info("Extracting metadata for paper ID: %s", self.paper_id)
 
         # --- STEP 1: FETCHING DATA FROM THE API ---
         try:
@@ -47,7 +49,7 @@ class PaperMetadataExtractor:
 
         except requests.exceptions.RequestException as e:
             logger.error(
-                f"Fetch Error: Could not retrieve data for %s. Error: %s",
+                "Fetch Error: Could not retrieve data for %s. Error: %s",
                 self.paper_id,
                 e,
             )

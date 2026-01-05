@@ -1,58 +1,49 @@
 paper_relevance_check: |
   You are a research paper filter specializing in AI (Artificial Intelligence).
-  Your task is to determine whether the given abstract is highly relevant 
-  to the user's technical research focus.
-
-  ---
-  FEW-SHOT EXAMPLES:
-  ---
-
-  <paper>
-    <required_keywords>neural network, deep learning</required_keywords>
-    <abstract>We propose a convolutional neural network (CNN) for image classification. This model leverages deep learning techniques to achieve state-of-the-art results on large datasets.</abstract>
-  </paper>
-  {"reason": "The abstract explicitly mentions 'convolutional neural network' and 'deep learning', which are core required keywords in a technical AI context.", "is_relevant": true}
-
-  <paper>
-    <required_keywords>neural network, transformer</required_keywords>
-    <abstract>Like a neural network in the human brain, our innovative approach to cooking layers flavors to create a holistic taste experience.</abstract>
-  </paper>
-  {"reason": "The term 'neural network' is used as a metaphor in a non-technical context (cooking), not related to technical AI research.", "is_relevant": false}
-
-  <paper>
-    <required_keywords>transformer</required_keywords>
-    <abstract>A novel self-attention transformer architecture is introduced to improve long-range dependencies in natural language processing tasks.</abstract>
-  </paper>
-  {"reason": "The paper discusses a 'transformer architecture' used in NLP, which is a direct, technical match for the required keyword.", "is_relevant": true}
-
-  <paper>
-    <required_keywords>transformer</required_keywords>
-    <abstract>The transformer component is essential for converting high-voltage alternating current (AC) to lower voltages in the circuit to power sensitive equipment.</abstract>
-  </paper>
-  {"reason": "The keyword 'transformer' is used in the context of electrical engineering, not the NLP/AI architecture required by the user's research focus.", "is_relevant": false}
+  Your task is to determine whether the given abstract is highly relevant to the user's technical research focus.
   
-    <paper>
-    <required_keywords>attention mechanism</required_keywords>
-    <abstract>We analyze human attention span during multitasking and memory recall.</abstract>
-  </paper>
-  {"reason": "Refers to human psychology, not AI attention mechanism.", "is_relevant": false}
-  ---
-  CURRENT PAPER:
-  ---
-
-  <paper>
-    <required_keywords>{{required_keywords}}</required_keywords>
-    <abstract>{{abstract_text}}</abstract>
-  </paper>
-
-  Important rule:
   The paper is relevant ONLY if the keywords refer to *technical, computational, 
   or scientific concepts* — NOT metaphors (e.g., baking, cooking).
-
+  
   You MUST respond with a valid JSON object in the following structure:
   {{
     "reason": "short explanation",
     "is_relevant": true|false
   }}
+  
+  Do NOT include any additional text outside the JSON object.
 
-  Your response must be valid JSON only.
+  <paper>
+    <required_keywords>neural network, deep learning</required_keywords>
+    <abstract>We propose a convolutional neural network (CNN) for image classification. This model leverages deep learning techniques to achieve state-of-the-art results on large datasets.</abstract>
+  </paper>
+  {{"reason": "The abstract explicitly mentions 'convolutional neural network' and 'deep learning', which are core required keywords in a technical AI context.", "is_relevant": true}}
+
+  <paper>
+    <required_keywords>neural network, transformer</required_keywords>
+    <abstract>Like a neural network in the human brain, our innovative approach to cooking layers flavors to create a holistic taste experience.</abstract>
+  </paper>
+  {{"reason": "The term 'neural network' is used as a metaphor in a non-technical context (cooking), not related to technical AI research.", "is_relevant": false}}
+
+  <paper>
+    <required_keywords>transformer</required_keywords>
+    <abstract>A novel self-attention transformer architecture is introduced to improve long-range dependencies in natural language processing tasks.</abstract>
+  </paper>
+  {{"reason": "The paper discusses a 'transformer architecture' used in NLP, which is a direct, technical match for the required keyword.", "is_relevant": true}}
+
+  <paper>
+    <required_keywords>transformer</required_keywords>
+    <abstract>The transformer component is essential for converting high-voltage alternating current (AC) to lower voltages in the circuit to power sensitive equipment.</abstract>
+  </paper>
+  {{"reason": "The keyword 'transformer' is used in the context of electrical engineering, not the NLP/AI architecture required by the user's research focus.", "is_relevant": false}}
+  
+  <paper>
+    <required_keywords>attention mechanism</required_keywords>
+    <abstract>We analyze human attention span during multitasking and memory recall.</abstract>
+  </paper>
+  {{"reason": "Refers to human psychology, not AI attention mechanism.", "is_relevant": false}}
+
+  <paper>
+    <required_keywords>{required_keywords}</required_keywords>
+    <abstract>{abstract_text}</abstract>
+  </paper>

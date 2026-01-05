@@ -1,3 +1,5 @@
+"""Module containing workflow node implementations for paper processing."""
+
 import logging
 from langgraph.graph import END
 from langgraph.types import Command
@@ -119,7 +121,7 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
 
     if not metadata:
         logger.warning(
-            f"Filter Error: Missing metadata or required_keywords for paper %s. Ending workflow.",
+            "Filter Error: Missing metadata or required_keywords for paper %s. Ending workflow.",
             paper_id,
         )
         return Command(
@@ -131,7 +133,7 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
         )
         
     if not required_keywords:
-        logger.info(f"No required keywords specified. Skipping relevance check.")
+        logger.info("No required keywords specified. Skipping relevance check.")
         return Command(
             goto=target_content_node, 
             update={
@@ -267,7 +269,53 @@ def embed_content_node(state: WorkflowState) -> Command:
         return Command(goto=END, update={"error": str(e)})
 
 
-def analyze_paper_node(state: WorkflowState) -> Command:
+def embed_paper_node(state: WorkflowState) -> Command:
+    """
+    Node that embeds the extracted text into the vector database.
+
+    Args:
+        state (WorkflowState): The current state of the workflow.
+
+    Returns:
+        Command: A command to continue or end the workflow.
+    """
+
+    logger.info("Embedding paper content into RAG system")
+
+    # Get data
+    content = state.get("content")
+    metadata = state.get("metadata", {})
+    paper_id = state.get("paper_id")
+
+    # Prepare data for RAG processor
+    paper_data = {
+        "paper_url": metadata.get("arxiv_pdf_url", paper_id),
+        "text_content": content,
+        "metadata": metadata,
+    }
+
+    # Run RAG processor
+    try:
+        paper_hash_id = rag_processor.process_paper(paper_data)
+
+        if not paper_hash_id:
+            return Command(goto=END, update={"error": "Embedding failed."})
+
+        logger.info("Paper embedded successfully. Hash: %s", paper_hash_id[:8])
+
+        return Command(
+            goto=ANALYZE_PAPER,
+            update={"paper_hash_id": paper_hash_id},
+        )
+
+    except Exception as e:
+        logger.error("Embedding failed: %s", e)
+        return Command(goto=END, update={"error": str(e)})
+
+
+def analyze_paper_node(
+    state: WorkflowState,
+) -> Command:  # pylint: disable=unused-argument
     """
     Node that performs paper analysis.
     :param state: analysis
@@ -304,7 +352,9 @@ def analyze_paper_node(state: WorkflowState) -> Command:
         return Command(goto=END, update={"error": str(e)})
 
 
-def publish_results_node(state: WorkflowState) -> Command:
+def publish_results_node(
+    state: WorkflowState,
+) -> Command:  # pylint: disable=unused-argument
     """
     Node that publishes the results of the analysis.
     :param state:

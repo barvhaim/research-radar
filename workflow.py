@@ -148,6 +148,33 @@ def print_summary(result: dict):
     ))
     console.print("")  
 
+def print_analysis(result: dict):
+    """Print the detailed Q&A analysis from the AI."""
+    analysis = result.get("analysis")
+
+    if not analysis:
+        console.print("\n[dim]No analysis text found in results.[/dim]")
+        return
+
+    console.print("\n[bold cyan]AI Analysis Results[/bold cyan]")
+    console.print("=" * 40)
+
+    if isinstance(analysis, dict):
+        for question, answer in analysis.items():
+            console.print(
+                Panel(
+                    Markdown(str(answer)),
+                    title=f"[bold yellow]Q: {question}[/bold yellow]",
+                    border_style="green",
+                    expand=False,
+                )
+            )
+            console.print("")
+
+    else:
+        console.print(analysis)
+
+
 def print_results(result: dict):
     """Print workflow results.
 

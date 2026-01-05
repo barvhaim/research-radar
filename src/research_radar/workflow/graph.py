@@ -1,3 +1,5 @@
+"""Module defining the workflow graph for paper processing."""
+
 from langgraph.graph import StateGraph
 from research_radar.workflow.state import WorkflowState
 from research_radar.workflow.node_types import (
@@ -35,6 +37,7 @@ def route_source_type(state: dict) -> str:
     return "extract_youtube_information"
 
 def build_graph():
+    """Build and compile the paper processing workflow graph."""
     flow = StateGraph(WorkflowState)
 
     flow.add_node(EXTRACT_PAPER_INFORMATION, extract_paper_information_node)
