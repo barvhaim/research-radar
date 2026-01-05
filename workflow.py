@@ -219,8 +219,8 @@ def run_workflow(paper_id: str):
 
 def main():
     """Main entry point."""
-    #paper_id = "2510.24081"  # https://huggingface.co/api/papers/2510.24081
-    paper_id = "AuZoDsNmG_s"  # New YouTube ID (Andrew Ng: AI Career Growth)
+    paper_id = "2510.24081"  # https://huggingface.co/api/papers/2510.24081
+    #paper_id = "AuZoDsNmG_s"  # New YouTube ID (Andrew Ng: AI Career Growth)
     run_workflow(paper_id=paper_id)
 
 
