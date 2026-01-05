@@ -67,7 +67,7 @@ class PaperAnalyzer:
 
         for question in self.questions:
             # 1. RAG Retrieval
-            chunks = self.rag_processor.search(question, k=4, article_hash=article_hash)
+            chunks = self.rag_processor.search(question, k=15, article_hash=article_hash)
             context_text = "\n\n".join([doc.page_content for doc in chunks])
 
             if not context_text:

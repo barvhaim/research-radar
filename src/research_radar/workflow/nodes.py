@@ -6,6 +6,8 @@ from research_radar.workflow.state import WorkflowState, WorkflowStatus
 from research_radar.core.paper_metadata_extractor import PaperMetadataExtractor
 from research_radar.core.paper_relevance_checker import PaperRelevanceChecker
 from research_radar.core.paper_content_extractor import PaperContentExtractor
+from research_radar.core.youtube_metadata_extractor import YouTubeMetadataExtractor
+from research_radar.core.youtube_content_extractor import YouTubeContentExtractor
 from research_radar.core.paper_rag_processor import PaperRAGProcessor
 from research_radar.core.paper_analyzer import PaperAnalyzer
 from research_radar.workflow.node_types import (
@@ -13,7 +15,7 @@ from research_radar.workflow.node_types import (
     ANALYZE_PAPER,
     PUBLISH_RESULTS,
     FILTER_PAPER_RELEVANCE,
-    EMBED_PAPER,
+    EMBED_CONTENT,
     EXTRACT_PAPER_INFORMATION,
 )
 
@@ -58,13 +60,44 @@ def extract_paper_information_node(state: WorkflowState) -> Command:
         update={
             "status": WorkflowStatus.RUNNING.value,
             "metadata": metadata,
+            "type": "paper",
         },
     )
 
+def extract_youtube_information_node(state: WorkflowState) -> Command:
+    """
+    Node that performs YouTube metadata extraction.
+    """
+    video_id = state.get("paper_id")
+    if not video_id:
+        return Command(goto=END, update={"error": "No Video ID provided."})
+
+    logger.info("Extracting YouTube video (%s) information", video_id)
+
+    extractor = YouTubeMetadataExtractor(video_id=video_id)
+    metadata = extractor.extract_metadata()
+
+    if metadata is None:
+        return Command(
+            goto=END,
+            update={
+                "status": WorkflowStatus.FAILED.value,
+                "error": f"Metadata extraction failed for video {video_id}.",
+            },
+        )
+    
+    return Command(
+        goto=FILTER_PAPER_RELEVANCE, 
+        update={
+            "status": WorkflowStatus.RUNNING.value,
+            "metadata": metadata,
+            "source_type": "youtube" 
+        },
+    )
 
 def filter_paper_relevance_node(state: WorkflowState) -> Command:
     """
-    Node that filters the paper based on keyword relevance,
+    Node that filters the paper (or video) based on keyword relevance,
     using the PaperRelevanceChecker class.
 
     Args:
@@ -77,7 +110,13 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
     required_keywords = state.get("required_keywords", [])
     paper_id = state.get("paper_id")
 
-    # Validation check
+    source_type = state.get("source_type", "paper")
+    
+    if source_type == "youtube":
+        target_content_node = "extract_youtube_content" 
+    else:
+        target_content_node = EXTRACT_PAPER_CONTENT
+
     if not metadata:
         logger.warning(
             f"Filter Error: Missing metadata or required_keywords for paper %s. Ending workflow.",
@@ -90,10 +129,11 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
                 "error": "Missing metadata or required keywords for relevance check.",
             },
         )
+        
     if not required_keywords:
         logger.info(f"No required keywords specified. Skipping relevance check.")
         return Command(
-            goto=EXTRACT_PAPER_CONTENT,
+            goto=target_content_node, 
             update={
                 "status": WorkflowStatus.RUNNING.value,
             },
@@ -107,16 +147,16 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
     is_relevant = checker.check_relevance(state)
 
     if is_relevant:
-        next_node = EXTRACT_PAPER_CONTENT
+        next_node = target_content_node 
         logger.info(
-            f"Paper %s: Determined relevant. Continuing to content extraction.",
-            paper_id,
+            f"Item %s: Determined relevant. Routing to: %s",
+            paper_id, next_node
         )
         status = WorkflowStatus.RUNNING.value
     else:
         next_node = END
         logger.warning(
-            f"Paper %s: Not relevant after all checks. Ending workflow.", paper_id
+            f"Item %s: Not relevant after all checks. Ending workflow.", paper_id
         )
         status = WorkflowStatus.COMPLETED.value
 
@@ -149,14 +189,41 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
     content = extractor.extract_content()
 
     return Command(
-        goto=EMBED_PAPER,
+        goto=EMBED_CONTENT,
         update={
             "content": content,
         },
     )
 
+def extract_youtube_content_node(state: WorkflowState) -> Command:
+    """
+    Node that performs YouTube transcript extraction.
+    """
+    video_id = state.get("paper_id")
+    logger.info("Extracting YouTube content for: %s", video_id)
 
-def embed_paper_node(state: WorkflowState) -> Command:
+    try:
+        extractor = YouTubeContentExtractor(source=video_id)
+        transcript = extractor.extract_content()
+
+        if not transcript:
+            return Command(
+                goto=END, 
+                update={"error": "Failed to extract transcript (no subtitles found)."}
+            )
+            
+        return Command(
+            goto=EMBED_CONTENT,
+            update={
+                "content": transcript
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Content extraction failed: {e}")
+        return Command(goto=END, update={"error": str(e)})
+
+def embed_content_node(state: WorkflowState) -> Command:
     """
     Node that embeds the extracted text into the vector database.
 

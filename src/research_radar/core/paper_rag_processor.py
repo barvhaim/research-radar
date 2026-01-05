@@ -69,7 +69,14 @@ class PaperRAGProcessor:
                 chunk.metadata["source"] = paper_url
                 chunk.metadata["article_hash"] = article_hash
 
-            self.vector_store.add_documents(chunks)
+            batch_size = 20
+            total_chunks = len(chunks)
+
+            for i in range(0, total_chunks, batch_size):
+                batch = chunks[i : i + batch_size]
+                self.vector_store.add_documents(batch)
+                logger.info(f"Indexed batch {i//batch_size + 1}: chunks {i} to {min(i+batch_size, total_chunks)}")
+
             logger.info("Successfully indexed %d chunks.", len(chunks))
 
             return article_hash
@@ -79,7 +86,7 @@ class PaperRAGProcessor:
             return None
         
     @traceable(run_type="retriever", name="retrieve_chunks")
-    def search(self, query: str, k: int = 3, article_hash: str = None):
+    def search(self, query: str, k: int = 4, article_hash: str = None):
         """
         Runs vector search
         """

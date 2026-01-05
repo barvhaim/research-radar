@@ -7,3 +7,4 @@ class LLMProviderType(Enum):
     """Enumeration of supported LLM provider types."""
 
     OLLAMA = "ollama"
+    GOOGLE = "google"
