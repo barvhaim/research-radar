@@ -24,12 +24,19 @@ def _get_base_llm_settings(model_name: str, model_parameters: Optional[Dict]) ->
             "model": model_name,
             **parameters,
         }
+    
+    if LLM_PROVIDER == LLMProviderType.GOOGLE:
+        return {
+            "model_name": model_name,  
+            "temperature": model_parameters.get("temperature", 0.0),
+            "max_output_tokens": model_parameters.get("max_tokens", 8192),
+        }
 
     raise ValueError(f"Incorrect LLM provider: {LLM_PROVIDER}")
 
 
 def get_chat_llm_client(
-    model_name: str = "granite4:micro",
+    model_name: Optional[str] = None,
     model_parameters: Optional[Dict] = None,
 ) -> Any:
     """Get a chat LLM client based on the configured provider.
@@ -41,11 +48,20 @@ def get_chat_llm_client(
     Returns:
         The LLM client instance.
     """
+    if model_name is None:
+        model_name = os.getenv("LLM_MODEL")
+        
     if LLM_PROVIDER == LLMProviderType.OLLAMA:
-        # pylint: disable=import-outside-toplevel
         from langchain_ollama import ChatOllama
-
         return ChatOllama(
+            **_get_base_llm_settings(
+                model_name=model_name, model_parameters=model_parameters
+            )
+        )
+
+    if LLM_PROVIDER == LLMProviderType.GOOGLE:
+        from langchain_google_vertexai import ChatVertexAI
+        return ChatVertexAI(
             **_get_base_llm_settings(
                 model_name=model_name, model_parameters=model_parameters
             )

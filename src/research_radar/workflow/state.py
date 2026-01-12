@@ -22,9 +22,11 @@ class WorkflowState(TypedDict):
     workflow_id: str
     paper_id: str
     metadata: Optional[Dict]
+    source_type: Optional[str]
     content: Optional[str]
     status: WorkflowStatus
     error: Optional[str]
     required_keywords: List[str]
     paper_hash_id: Optional[str]
     analysis: Optional[Dict[str, str]]
+    summary: Optional[str]

@@ -33,14 +33,14 @@ def analyze_paper(paper_id: str, selected_keywords: list) -> tuple[str, str]:
     Analyze a paper and return the results.
 
     Args:
-        paper_id: Hugging Face paper ID (e.g., "2510.24081")
+        paper_id: Hugging Face paper ID (e.g., "2510.24081") / YT video ID
         selected_keywords: List of selected keywords for filtering
 
     Returns:
         Tuple of (status_message, summary_text)
     """
     if not paper_id or not paper_id.strip():
-        return "Error", "Please enter a valid paper ID"
+        return "Error", "Please enter a valid ID"
 
     try:
         logger.info(
@@ -140,7 +140,7 @@ def create_ui():
             with gr.Column(scale=2):
                 paper_id_input = gr.Textbox(
                     label="Paper ID",
-                    placeholder="Enter Hugging Face paper ID (e.g., 2510.24081)",
+                    placeholder="Enter a Hugging Face paper ID or a YouTube video ID",
                     lines=1,
                 )
 
