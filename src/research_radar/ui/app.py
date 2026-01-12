@@ -74,7 +74,7 @@ def create_ui():
     """Create and configure the Gradio interface."""
 
     # Professional theme with modern blue color scheme
-    theme = gr.themes.Soft(
+    theme = gr.themes.Glass(
         primary_hue="blue",
         secondary_hue="slate",
         font=[gr.themes.GoogleFont("Inter"), "sans-serif"],
@@ -129,19 +129,19 @@ def create_ui():
         "Safety",
     ]
 
-    with gr.Blocks(title="Research Radar - Paper Analysis", theme=theme) as demo:
+    with gr.Blocks(title="Research Radar - Paper Analysis", theme=theme, css="body { max-width: 1200px; margin: 0 auto; padding: 20px; } textarea { scrollbar-width: none; } textarea::-webkit-scrollbar { display: none; }") as demo:
         gr.Markdown(
             """
-            <div style="text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%); border-radius: 12px; margin-bottom: 30px;">
-                <h1 style="margin: 0; font-size: 36px; font-weight: 700; color: #1e40af; letter-spacing: -0.5px;">Research Radar</h1>
-                <p style="margin: 8px 0 0 0; font-size: 16px; color: #64748b; font-weight: 500;">AI-Powered Research Analysis Platform</p>
-                <p style="margin: 12px 0 0 0; font-size: 14px; color: #94a3b8;">Analyze research papers and videos with intelligent content filtering</p>
+            <div style="text-align: center; padding: 60px 20px 50px 20px; backdrop-filter: blur(10px); border-radius: 16px; margin-bottom: 40px; border: 1px solid rgba(255, 255, 255, 0.7);">
+                <h1 style="margin: 0; font-size: 48px; font-weight: 900; color: #1e40af; letter-spacing: -1.2px; font-family: 'Inter', sans-serif;">Research Radar</h1>
+                <p style="margin: 16px 0 8px 0; font-size: 20px; color: #3b82f6; font-weight: 600;">Intelligent Research Analysis Platform</p>
+                <p style="margin: 0; font-size: 16px; color: #64748b; font-weight: 400; line-height: 1.5;">Extract insights from papers and videos with AI-powered filtering and analysis</p>
             </div>
             """
         )
 
-        with gr.Row():
-            with gr.Column(scale=2):
+        with gr.Row(equal_height=False):
+            with gr.Column(scale=3):
                 paper_id_input = gr.Textbox(
                     label="Enter content ID",
                     placeholder="Enter a Hugging Face paper ID (e.g. 2510.24081) or a YouTube video ID (e.g. qYNweeDHiyU)",
@@ -157,14 +157,17 @@ def create_ui():
                     allow_custom_value=True,
                 )
 
-            with gr.Column(scale=1):
-                analyze_btn = gr.Button("Analyze Content", variant="primary", size="lg")
+            with gr.Column(scale=0.5):
+                gr.Markdown("")  # Spacer for button alignment
+                analyze_btn = gr.Button("→", variant="primary", size="lg", min_width=50)
 
         status_output = gr.Textbox(
             label="Status",
             interactive=False,
             lines=1,
         )
+
+        gr.Markdown("")  # Spacing
 
         with gr.Row():
             with gr.Column():
@@ -180,6 +183,8 @@ def create_ui():
                     interactive=False,
                     lines=12,
                 )
+
+        gr.Markdown("")  # Spacing
 
         # Connect the button click to the analysis function
         analyze_btn.click(
@@ -197,8 +202,9 @@ def create_ui():
 
         gr.Markdown(
             """
-            ---
-            **Note:** Analysis may take a few moments depending on the content size and complexity.
+            <div style="margin-top: 40px; padding: 20px; background: rgba(59, 130, 246, 0.05); border-radius: 12px; border-left: 4px solid #3b82f6;">
+            <p style="margin: 0; font-size: 14px; color: #FFFFFF; font-weight: 500;">⏱️ Processing may take a few moments depending on content size.</p>
+            </div>
             """
         )
 
