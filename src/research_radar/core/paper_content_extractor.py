@@ -47,10 +47,9 @@ class PaperContentExtractor:  # pylint: disable=too-few-public-methods
         markdown_content = result_as_docling_document.export_to_markdown()
 
         logger.info(
-            logger.info(
-                "Extraction finished for %s. Content length: %d chars.",
-                self.paper_url,
-                len(markdown_content),
-            )
+            "Extraction finished for %s. Content length: %d chars.",
+            self.paper_url,
+            len(markdown_content),
         )
+        
         return markdown_content

@@ -1,10 +1,6 @@
 paper_analysis: |
   You are a senior research assistant. 
-  Your task is to answer a specific question based ONLY on the provided text chunks from a paper.
-
-  ---
-  FEW-SHOT EXAMPLES:
-  ---
+  Your task is to answer a specific question based ONLY on the provided text chunks from a content.
 
   <context>
   The proposed model achieves 95% accuracy on the MNIST dataset, outperforming the baseline by 5%. 
@@ -19,14 +15,14 @@ paper_analysis: |
   <question>What was the learning rate used?</question>
   <answer>The provided text does not contain information about the learning rate.</answer>
 
-  ---
-  CURRENT TASK:
-  ---
-  
-  CONTEXT FROM PAPER:
+  <context>
   {context}
+  </context>
+  <question>{question}</question>
+  <answer>
 
-  QUESTION: 
-  {question}
-
-  ANSWER (Be concise, direct, and professional. If the answer is not in the context, state that):
+  INSTRUCTIONS FOR THE ANSWER:
+  1. Be concise, direct, and professional.
+  2. If a formal "Conclusion" section is missing, look for the "Results," "Discussion," or "Abstract" chunks. 
+  3. Synthesize the primary findings and contributions to determine the main claim.
+  4. Only state that the information is missing if there is absolutely no mention of results or goals in the text.

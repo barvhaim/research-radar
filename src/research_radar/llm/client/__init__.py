@@ -49,17 +49,10 @@ def get_chat_llm_client(
         The LLM client instance.
     """
     if model_name is None:
-        # Default to a safe generic if .env is missing
-        model_name = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+        model_name = os.getenv("LLM_MODEL")
         
     if LLM_PROVIDER == LLMProviderType.OLLAMA:
-        from langchain_ollama import (
-            ChatOllama,
-        )  
-
-        if "gemini" in model_name:
-             model_name = "llama3.2" 
-
+        from langchain_ollama import ChatOllama
         return ChatOllama(
             **_get_base_llm_settings(
                 model_name=model_name, model_parameters=model_parameters
@@ -67,13 +60,7 @@ def get_chat_llm_client(
         )
 
     if LLM_PROVIDER == LLMProviderType.GOOGLE:
-        from langchain_google_vertexai import (
-            ChatVertexAI
-        ) 
-        
-        if model_name == "granite4:micro" or "granite" in model_name:
-            model_name = "gemini-1.5-flash"
-
+        from langchain_google_vertexai import ChatVertexAI
         return ChatVertexAI(
             **_get_base_llm_settings(
                 model_name=model_name, model_parameters=model_parameters

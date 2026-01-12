@@ -12,16 +12,15 @@ logger = logging.getLogger(__name__)
 
 class PaperAnalyzer:
     """
-    A class to analyze papers using RAG and LLM.
+    A class to analyze papers(or YT videos) using RAG and LLM.
     """
 
     def __init__(self, rag_processor: PaperRAGProcessor):
         self.rag_processor = rag_processor
         self.questions = [
-            "What problem does the paper address?",
+            "What problem does the content address?",
             "Why is this problem important?",
-            "What is the main claim or conclusion?",
-            "What is the key insight of the paper?",
+            "What is the key insight of the content?",
         ]
 
     @staticmethod
@@ -56,7 +55,7 @@ class PaperAnalyzer:
         Runs the analysis loop.
         """
         results = {}
-        logger.info("Starting intial summary.")
+        logger.info("Starting initial summary.")
 
         # Build chain once
         try:
@@ -67,7 +66,7 @@ class PaperAnalyzer:
 
         for question in self.questions:
             # 1. RAG Retrieval
-            chunks = self.rag_processor.search(question, k=15, article_hash=article_hash)
+            chunks = self.rag_processor.search(question, k=4, article_hash=article_hash)
             context_text = "\n\n".join([doc.page_content for doc in chunks])
 
             if not context_text:

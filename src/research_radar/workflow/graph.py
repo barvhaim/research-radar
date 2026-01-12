@@ -1,5 +1,7 @@
 """Module defining the workflow graph for paper processing."""
 
+import re
+
 from langgraph.graph import StateGraph
 from research_radar.workflow.state import WorkflowState
 from research_radar.workflow.node_types import (
@@ -26,15 +28,16 @@ from research_radar.workflow.nodes import (
 
 def route_source_type(state: dict) -> str:
     """
-    Router: Checks if input ID is a Paper (Arxiv) or YouTube Video.
-    Used for determining the entry point state.
+    Router: Uses regex to check if input is an ArXiv ID/URL or a YouTube URL.
     """
-    input_id = state.get("paper_id", "")
+    input_id = state.get("paper_id", "").strip()
     
-    if "." in input_id and input_id.replace(".", "").isdigit():
-        return "extract_paper_information"
+    youtube_pattern = r"(youtube\.com|youtu\.be|^[a-zA-Z0-9_-]{11}$)"
     
-    return "extract_youtube_information"
+    if re.search(youtube_pattern, input_id):
+        return "extract_youtube_information"
+    
+    return "extract_paper_information"
 
 def build_graph():
     """Build and compile the paper processing workflow graph."""
