@@ -97,7 +97,7 @@ function App() {
         },
         body: JSON.stringify({
           paper_id: paperId.trim(),
-          keywords: selectedKeywords.length > 0 ? selectedKeywords : null,
+          keywords: selectedKeywords.length > 0 ? selectedKeywords : [],
         }),
       })
 

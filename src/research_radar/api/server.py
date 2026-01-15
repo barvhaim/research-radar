@@ -89,9 +89,10 @@ async def analyze_content(request: AnalysisRequest):
         )
 
         # Run the workflow
+        # Pass empty list [] to skip relevance check, None for default keywords
         result = run_workflow_for_paper(
             paper_id=request.paper_id.strip(),
-            required_keywords=request.keywords if request.keywords else None,
+            required_keywords=request.keywords if request.keywords is not None else None,
         )
 
         return AnalysisResponse(
