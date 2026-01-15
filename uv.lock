@@ -4684,6 +4684,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "docling" },
+    { name = "fastapi" },
     { name = "fastmcp" },
     { name = "gradio" },
     { name = "hf-xet" },
@@ -4702,6 +4703,7 @@ dependencies = [
     { name = "requests" },
     { name = "rich" },
     { name = "sentence-transformers" },
+    { name = "uvicorn" },
     { name = "yt-dlp" },
 ]
 
@@ -4716,6 +4718,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "docling", specifier = ">=2.58.0" },
+    { name = "fastapi", specifier = ">=0.115.0" },
     { name = "fastmcp", specifier = ">=2.14.1" },
     { name = "gradio", specifier = ">=5.49.1" },
     { name = "hf-xet", specifier = ">=1.2.0" },
@@ -4734,6 +4737,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32.5" },
     { name = "rich", specifier = ">=14.2.0" },
     { name = "sentence-transformers", specifier = ">=5.1.2" },
+    { name = "uvicorn", specifier = ">=0.32.0" },
     { name = "yt-dlp", specifier = ">=2025.12.8" },
 ]
 
