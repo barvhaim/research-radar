@@ -15,6 +15,10 @@ try:
     from langchain_ibm import WatsonxEmbeddings
 except ImportError:
     pass
+try:
+    from langchain_google_vertexai import VertexAIEmbeddings
+except ImportError:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +56,7 @@ def get_embeddings_client() -> Any:
         - EMBEDDINGS_PROVIDER=huggingface
         - EMBEDDINGS_PROVIDER=ollama
         - EMBEDDINGS_PROVIDER=watsonx
+        - EMBEDDINGS_PROVIDER=google
     """
     provider_str = os.getenv("EMBEDDINGS_PROVIDER", "huggingface").lower()
 
@@ -86,5 +91,9 @@ def get_embeddings_client() -> Any:
             project_id=settings["project_id"],
             params=settings["params"],
         )
+
+    elif provider == EmbeddingsProvider.GOOGLE:
+        model_name = os.getenv("EMBEDDINGS_MODEL_NAME", "text-embedding-004")
+        return VertexAIEmbeddings(model_name=model_name)
 
     raise ValueError(f"Unsupported embeddings provider: {provider}")

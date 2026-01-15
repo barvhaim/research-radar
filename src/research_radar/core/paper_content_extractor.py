@@ -51,4 +51,5 @@ class PaperContentExtractor:  # pylint: disable=too-few-public-methods
             self.paper_url,
             len(markdown_content),
         )
+        
         return markdown_content
