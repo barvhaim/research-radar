@@ -1,3 +1,5 @@
+"""Factory for creating embeddings clients based on provider configuration."""
+
 import os
 import logging
 from typing import Dict, Any
@@ -78,7 +80,7 @@ def get_embeddings_client() -> Any:
         settings = _get_base_llm_settings(model_name, provider)
         return OllamaEmbeddings(**settings)
 
-    elif provider == EmbeddingsProvider.WATSONX:
+    if provider == EmbeddingsProvider.WATSONX:
         model_name = os.getenv(
             "EMBEDDINGS_MODEL_NAME", "ibm/granite-embedding-107m-multilingual"
         )
@@ -92,7 +94,7 @@ def get_embeddings_client() -> Any:
             params=settings["params"],
         )
 
-    elif provider == EmbeddingsProvider.GOOGLE:
+    if provider == EmbeddingsProvider.GOOGLE:
         model_name = os.getenv("EMBEDDINGS_MODEL_NAME", "text-embedding-004")
         return VertexAIEmbeddings(model_name=model_name)
 

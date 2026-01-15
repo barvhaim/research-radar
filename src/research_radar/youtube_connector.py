@@ -1,3 +1,5 @@
+"""YouTube video information and transcript extraction utilities."""
+
 import logging
 import json
 import os
@@ -61,7 +63,7 @@ def get_video_transcript(
     :param video_id: The YouTube video ID.
     :returns: The transcription of the YouTube video.
     """
-    logger.info(f"Transcribing video with ID: {video_id}")
+    logger.info("Transcribing video with ID: %s", video_id)
     retries = 0
     subtitle_files = []  # Track files to clean up later
 
@@ -95,7 +97,7 @@ def get_video_transcript(
                 video_url = f"https://www.youtube.com/watch?v={video_id}"
                 info_dict = ydl.extract_info(video_url, download=True)
 
-                logger.debug(f"Extracted info for video {video_id}: {info_dict}")
+                logger.debug("Extracted info for video %s: %s", video_id, info_dict)
                 if not info_dict:
                     return f"Failed to extract info for video {video_id}"
 
@@ -124,28 +126,33 @@ def get_video_transcript(
                                 transcript = []
                                 capture = False
 
+                                skip_patterns = {
+                                    "WEBVTT",
+                                    "Kind: captions",
+                                    "Language: en-US",
+                                    "Language: en",
+                                }
                                 for line in lines:
+                                    stripped = line.strip()
                                     # Skip timing lines and empty lines
                                     if (
                                         "-->" in line
-                                        or not line.strip()
-                                        or line.strip() == "WEBVTT"
-                                        or line.strip() == "Kind: captions"
-                                        or line.strip() == "Language: en-US"
-                                        or line.strip() == "Language: en"
+                                        or not stripped
+                                        or stripped in skip_patterns
                                     ):
                                         capture = True
                                         continue
 
-                                    # If we've started capturing and line has content, add to transcript
-                                    if capture and line.strip():
+                                    # If we've started capturing and line has content
+                                    if capture and stripped:
                                         # Extract the sentence from the line
-                                        parsed_line = _extract_sentence(line.strip())
+                                        parsed_line = _extract_sentence(stripped)
                                         transcript.append(parsed_line.strip())
 
                                 # Log before cleanup
                                 logger.info(
-                                    f"Transcript assembly complete. Found {len(transcript)} lines"
+                                    "Transcript assembly complete. Found %d lines",
+                                    len(transcript),
                                 )
                                 logger.info("Starting file cleanup...")
 
@@ -157,13 +164,14 @@ def get_video_transcript(
                                 )
                                 final_transcript = " ".join(transcript)
                                 logger.info(
-                                    f"Final transcript length: {len(final_transcript)} chars"
+                                    "Final transcript length: %d chars",
+                                    len(final_transcript),
                                 )
 
                                 return final_transcript
 
                         except Exception as e:
-                            logger.error(f"Error processing subtitle file: {str(e)}")
+                            logger.error("Error processing subtitle file: %s", e)
                             _cleanup_files(subtitle_files)
                             return f"Error reading subtitle file: {str(e)}"
 
@@ -175,13 +183,15 @@ def get_video_transcript(
             if retries <= MAX_RETRIES:
                 # Wait before retrying
                 logger.warning(
-                    f"Attempt {retries} failed: {str(e)}. Retrying in {RETRY_DELAY} seconds..."
+                    "Attempt %d failed: %s. Retrying in %s seconds...",
+                    retries,
+                    e,
+                    RETRY_DELAY,
                 )
                 time.sleep(RETRY_DELAY)
                 continue
-            else:
-                _cleanup_files(subtitle_files)
-                return f"Failed to transcribe the video after {MAX_RETRIES} attempts: {str(e)}"
+            _cleanup_files(subtitle_files)
+            return f"Failed to transcribe the video after {MAX_RETRIES} attempts: {e}"
 
     _cleanup_files(subtitle_files)
     return "Failed to transcribe the video after maximum retries."
@@ -197,6 +207,6 @@ def _cleanup_files(files):
         try:
             if os.path.exists(file):
                 os.remove(file)
-                logger.debug(f"Removed file: {file}")
+                logger.debug("Removed file: %s", file)
         except Exception as e:
-            logger.warning(f"Failed to remove file {file}: {str(e)}")
+            logger.warning("Failed to remove file %s: %s", file, e)

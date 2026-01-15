@@ -18,7 +18,6 @@ from research_radar.workflow.node_types import (
     PUBLISH_RESULTS,
     FILTER_PAPER_RELEVANCE,
     EMBED_CONTENT,
-    EXTRACT_PAPER_INFORMATION,
 )
 
 rag_processor = PaperRAGProcessor()  # Global instance to manage RAG pipline
@@ -152,14 +151,12 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
 
     if is_relevant:
         next_node = target_content_node
-        logger.info(
-            f"Item %s: Determined relevant. Routing to: %s", paper_id, next_node
-        )
+        logger.info("Item %s: Determined relevant. Routing to: %s", paper_id, next_node)
         status = WorkflowStatus.RUNNING.value
     else:
         next_node = END
         logger.warning(
-            f"Item %s: Not relevant after all checks. Ending workflow.", paper_id
+            "Item %s: Not relevant after all checks. Ending workflow.", paper_id
         )
         status = WorkflowStatus.COMPLETED.value
 
@@ -219,7 +216,7 @@ def extract_youtube_content_node(state: WorkflowState) -> Command:
         return Command(goto=EMBED_CONTENT, update={"content": transcript})
 
     except Exception as e:
-        logger.error(f"Content extraction failed: {e}")
+        logger.error("Content extraction failed: %s", e)
         return Command(goto=END, update={"error": str(e)})
 
 

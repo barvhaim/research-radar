@@ -1,9 +1,11 @@
+"""YouTube video transcript extraction using yt-dlp."""
+
 import logging
 import os
 import re
 import time
-import yt_dlp
 from typing import List
+import yt_dlp
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ class YouTubeContentExtractor:
         Extract content (transcript) from the YouTube video.
         :return: Transcript text
         """
-        logger.info(f"Extracting content for video ID: {self.video_id}")
+        logger.info("Extracting content for video ID: %s", self.video_id)
 
         transcript = self._get_video_transcript()
 
@@ -80,7 +82,7 @@ class YouTubeContentExtractor:
 
             except Exception as e:
                 retries += 1
-                logger.warning(f"Retry {retries}/{self.MAX_RETRIES} failed: {e}")
+                logger.warning("Retry %d/%d failed: %s", retries, self.MAX_RETRIES, e)
                 time.sleep(self.RETRY_DELAY)
 
         self._cleanup_files(subtitle_files)
@@ -116,7 +118,7 @@ class YouTubeContentExtractor:
             return " ".join(transcript)
 
         except Exception as e:
-            logger.error(f"Error parsing VTT: {e}")
+            logger.error("Error parsing VTT: %s", e)
             self._cleanup_files(files_to_clean)
             return ""
 
@@ -134,4 +136,4 @@ class YouTubeContentExtractor:
                 if os.path.exists(file):
                     os.remove(file)
             except Exception as e:
-                logger.warning(f"Failed to remove file {file}: {e}")
+                logger.warning("Failed to remove file %s: %s", file, e)

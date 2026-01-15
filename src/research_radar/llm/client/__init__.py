@@ -34,7 +34,7 @@ def _get_base_llm_settings(model_name: str, model_parameters: Optional[Dict]) ->
 
     if LLM_PROVIDER == LLMProviderType.OPENAI:
         parameters = {
-            "max_tokens": model_parameters.get("max_tokens", 100),
+            "max_tokens": model_parameters.get("max_tokens", 1024),
             "temperature": model_parameters.get("temperature", 0),
             "stop": model_parameters.get("stop_sequences", []),
         }
@@ -48,8 +48,8 @@ def _get_base_llm_settings(model_name: str, model_parameters: Optional[Dict]) ->
         rits_base_url = os.getenv("RITS_API_BASE_URL")
 
         parameters = {
-            "max_tokens": model_parameters.get("max_tokens", 100),
-            "temperature": model_parameters.get("temperature", 0.9),
+            "max_tokens": model_parameters.get("max_tokens", 1024),
+            "temperature": model_parameters.get("temperature", 0.7),
             "repetition_penalty": model_parameters.get("repetition_penalty", 1.0),
             "top_k": model_parameters.get("top_k", 50),
             "top_p": model_parameters.get("top_p", 1.0),

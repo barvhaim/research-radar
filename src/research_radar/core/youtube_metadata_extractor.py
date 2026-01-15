@@ -1,6 +1,9 @@
+"""YouTube video metadata extraction using yt-dlp."""
+
 import logging
+from typing import Any, Dict, Optional
+
 import yt_dlp
-from typing import Dict, Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +22,7 @@ class YouTubeMetadataExtractor:
         Extract metadata from the YouTube video.
         :return: Dictionary
         """
-        logger.info(f"Extracting metadata for video ID: %s", self.video_id)
+        logger.info("Extracting metadata for video ID: %s", self.video_id)
 
         try:
             # Configure yt-dlp to be fast and silent
@@ -43,7 +46,7 @@ class YouTubeMetadataExtractor:
 
         except Exception as e:
             logger.error(
-                f"Fetch Error: Could not retrieve data for %s. Error: %s",
+                "Fetch Error: Could not retrieve data for %s. Error: %s",
                 self.video_id,
                 e,
             )

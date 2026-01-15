@@ -1,3 +1,5 @@
+"""RAG pipeline for processing and indexing research papers into ChromaDB."""
+
 import logging
 import hashlib
 
@@ -56,7 +58,7 @@ class PaperRAGProcessor:
 
         if not text_content:
             logger.warning("No content for %s", paper_url)
-            return
+            return None
 
         article_hash = hashlib.sha256(text_content.encode("utf-8")).hexdigest()
         logger.info("Processing paper: %s (Hash: %s...)", paper_url, article_hash[:8])
@@ -76,7 +78,10 @@ class PaperRAGProcessor:
                 batch = chunks[i : i + batch_size]
                 self.vector_store.add_documents(batch)
                 logger.info(
-                    f"Indexed batch {i//batch_size + 1}: chunks {i} to {min(i+batch_size, total_chunks)}"
+                    "Indexed batch %d: chunks %d to %d",
+                    i // batch_size + 1,
+                    i,
+                    min(i + batch_size, total_chunks),
                 )
 
             logger.info("Successfully indexed %d chunks.", len(chunks))

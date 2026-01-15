@@ -1,3 +1,5 @@
+"""Paper analysis using RAG and LLM for question answering and summarization."""
+
 import logging
 from typing import Dict
 from langchain_core.output_parsers import StrOutputParser
@@ -121,7 +123,7 @@ class PaperAnalyzer:
         try:
             template_str = self._get_summary_prompt_template_str()
         except Exception as exc:
-            logger.error(f"Could not load summary prompt: {exc}")
+            logger.error("Could not load summary prompt: %s", exc)
             return "Could not load summary prompt"
 
         prompt = PromptTemplate(
@@ -138,5 +140,5 @@ class PaperAnalyzer:
             summary = chain.invoke({"context_str": context_string})
             return summary
         except Exception as exe:
-            logger.error(f"Error generating summary: {exe}")
+            logger.error("Error generating summary: %s", exe)
             return "Error generating summary"

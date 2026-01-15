@@ -1,3 +1,5 @@
+"""Gradio web UI for Research Radar paper analysis."""
+
 import logging
 import gradio as gr
 from dotenv import load_dotenv
@@ -44,7 +46,7 @@ def analyze_paper(paper_id: str, selected_keywords: list) -> tuple[str, str, str
 
     try:
         logger.info(
-            f"Starting analysis for: {paper_id} with keywords: {selected_keywords}"
+            "Starting analysis for: %s with keywords: %s", paper_id, selected_keywords
         )
 
         # Call workflow adapter directly with selected keywords
@@ -68,8 +70,8 @@ def analyze_paper(paper_id: str, selected_keywords: list) -> tuple[str, str, str
         return status_msg, analysis_text, summary
 
     except Exception as e:
-        logger.error(f"Error analyzing {paper_id}: {e}", exc_info=True)
-        return "Error occurred", "", f"Failed to analyze: {str(e)}"
+        logger.error("Error analyzing %s: %s", paper_id, e, exc_info=True)
+        return "Error occurred", "", f"Failed to analyze: {e}"
 
 
 def create_ui():
@@ -131,18 +133,29 @@ def create_ui():
         "Safety",
     ]
 
+    custom_css = (
+        "body { max-width: 1200px; margin: 0 auto; padding: 20px; } "
+        "textarea { scrollbar-width: none; } "
+        "textarea::-webkit-scrollbar { display: none; }"
+    )
     with gr.Blocks(
         title="Research Radar - Paper Analysis",
         theme=theme,
-        css="body { max-width: 1200px; margin: 0 auto; padding: 20px; } textarea { scrollbar-width: none; } textarea::-webkit-scrollbar { display: none; }",
+        css=custom_css,
     ) as demo:
         gr.Markdown(
             """
-            <div style="text-align: center; padding: 60px 20px 50px 20px; backdrop-filter: blur(10px); border-radius: 16px; margin-bottom: 40px; border: 1px solid rgba(255, 255, 255, 0.7);">
-                <h1 style="margin: 0; font-size: 48px; font-weight: 900; color: #1e40af; letter-spacing: -1.2px; font-family: 'Inter', sans-serif;">Research Radar</h1>
-                <p style="margin: 16px 0 8px 0; font-size: 20px; color: #3b82f6; font-weight: 600;">Intelligent Research Analysis Platform</p>
-                <p style="margin: 0; font-size: 16px; color: #64748b; font-weight: 400; line-height: 1.5;">Extract insights from papers and videos with AI-powered filtering and analysis</p>
-            </div>
+<div style="text-align: center; padding: 60px 20px 50px 20px;
+backdrop-filter: blur(10px); border-radius: 16px; margin-bottom: 40px;
+border: 1px solid rgba(255, 255, 255, 0.7);">
+<h1 style="margin: 0; font-size: 48px; font-weight: 900; color: #1e40af;
+letter-spacing: -1.2px; font-family: 'Inter', sans-serif;">Research Radar</h1>
+<p style="margin: 16px 0 8px 0; font-size: 20px; color: #3b82f6;
+font-weight: 600;">Intelligent Research Analysis Platform</p>
+<p style="margin: 0; font-size: 16px; color: #64748b; font-weight: 400;
+line-height: 1.5;">Extract insights from papers and videos with AI-powered
+filtering and analysis</p>
+</div>
             """
         )
 
@@ -150,7 +163,7 @@ def create_ui():
             with gr.Column(scale=3):
                 paper_id_input = gr.Textbox(
                     label="Enter content ID",
-                    placeholder="Enter a Hugging Face paper ID (e.g. 2510.24081) or a YouTube video ID (e.g. qYNweeDHiyU)",
+                    placeholder="Paper ID (e.g. 2510.24081) or YouTube ID (e.g. qYNweeDHiyU)",
                     lines=1,
                 )
 
@@ -208,9 +221,12 @@ def create_ui():
 
         gr.Markdown(
             """
-            <div style="margin-top: 40px; padding: 20px; background: rgba(59, 130, 246, 0.05); border-radius: 12px; border-left: 4px solid #3b82f6;">
-            <p style="margin: 0; font-size: 14px; color: #FFFFFF; font-weight: 500;">⏱️ Processing may take a few moments depending on content size.</p>
-            </div>
+<div style="margin-top: 40px; padding: 20px;
+background: rgba(59, 130, 246, 0.05); border-radius: 12px;
+border-left: 4px solid #3b82f6;">
+<p style="margin: 0; font-size: 14px; color: #FFFFFF; font-weight: 500;">
+Processing may take a few moments depending on content size.</p>
+</div>
             """
         )
 
