@@ -9,13 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 class YouTubeContentExtractor:
-    """ A class to extract content (transcript) from a YouTube video. """
+    """A class to extract content (transcript) from a YouTube video."""
 
     MAX_RETRIES = 3
     RETRY_DELAY = 2.0
 
     def __init__(self, source: str):
-        """ :param source: The YouTube Video ID """
+        """:param source: The YouTube Video ID"""
         self.video_id = source
         self.video_url = f"https://www.youtube.com/watch?v={source}"
 
@@ -37,7 +37,6 @@ class YouTubeContentExtractor:
             len(transcript),
         )
         return transcript
-    
 
     def _get_video_transcript(self) -> str:
         """Internal logic to download and parse subtitles."""
@@ -60,17 +59,19 @@ class YouTubeContentExtractor:
 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info_dict = ydl.extract_info(self.video_url, download=True)
-                    
+
                     # Check for requested subtitles
                     if "requested_subtitles" in info_dict:
                         subtitle_info = info_dict["requested_subtitles"]
                         # Prioritize explicit English, then auto-generated
-                        lang = next((l for l in ["en", "en-US"] if l in subtitle_info), None)
-                        
+                        lang = next(
+                            (l for l in ["en", "en-US"] if l in subtitle_info), None
+                        )
+
                         if lang:
                             subtitle_file = f"{self.video_id}.{lang}.vtt"
                             subtitle_files.append(subtitle_file)
-                            
+
                             # Parse the VTT file
                             return self._parse_vtt_file(subtitle_file, subtitle_files)
 
@@ -81,7 +82,7 @@ class YouTubeContentExtractor:
                 retries += 1
                 logger.warning(f"Retry {retries}/{self.MAX_RETRIES} failed: {e}")
                 time.sleep(self.RETRY_DELAY)
-        
+
         self._cleanup_files(subtitle_files)
         return ""
 
@@ -100,9 +101,13 @@ class YouTubeContentExtractor:
                 if "-->" in line:
                     capture = True
                     continue
-                if line.strip() in ["WEBVTT", "Kind: captions", "Language: en", "Language: en-US"] or not line.strip():
+                if (
+                    line.strip()
+                    in ["WEBVTT", "Kind: captions", "Language: en", "Language: en-US"]
+                    or not line.strip()
+                ):
                     continue
-                
+
                 if capture and line.strip():
                     clean_line = self._extract_sentence(line.strip())
                     transcript.append(clean_line)

@@ -75,7 +75,9 @@ class PaperRAGProcessor:
             for i in range(0, total_chunks, batch_size):
                 batch = chunks[i : i + batch_size]
                 self.vector_store.add_documents(batch)
-                logger.info(f"Indexed batch {i//batch_size + 1}: chunks {i} to {min(i+batch_size, total_chunks)}")
+                logger.info(
+                    f"Indexed batch {i//batch_size + 1}: chunks {i} to {min(i+batch_size, total_chunks)}"
+                )
 
             logger.info("Successfully indexed %d chunks.", len(chunks))
 
@@ -84,7 +86,7 @@ class PaperRAGProcessor:
         except Exception as e:
             logger.error("Failed to process paper: %s", e)
             return None
-        
+
     @traceable(run_type="retriever", name="retrieve_chunks")
     def search(self, query: str, k: int = 4, article_hash: str = None):
         """

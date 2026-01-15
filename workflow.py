@@ -64,8 +64,8 @@ def create_initial_state(paper_id: str) -> dict:
             "human-annotated benchmarks",
             "rubrics",
             "LLMs",
-            "AI",          
-            "career",      
+            "AI",
+            "career",
             "growth",
             "commonsense reasoning",
             "Global PIQA",
@@ -110,6 +110,7 @@ def build_results_table(result: dict) -> Table:
 
     return table
 
+
 def print_analysis(result: dict):
     """Print the detailed Q&A analysis from the AI."""
     analysis = result.get("analysis")
@@ -120,16 +121,19 @@ def print_analysis(result: dict):
 
     if isinstance(analysis, dict):
         for question, answer in analysis.items():
-            console.print(Panel(
-                Markdown(str(answer)), 
-                title=f"[bold yellow]Q: {question}[/bold yellow]",
-                border_style="green",
-                expand=False
-            ))
-            console.print("") 
-    
+            console.print(
+                Panel(
+                    Markdown(str(answer)),
+                    title=f"[bold yellow]Q: {question}[/bold yellow]",
+                    border_style="green",
+                    expand=False,
+                )
+            )
+            console.print("")
+
     else:
         console.print(analysis)
+
 
 def print_summary(result: dict):
     """Print the executive summary of the paper."""
@@ -137,16 +141,19 @@ def print_summary(result: dict):
 
     if not summary:
         return
-    
+
     # Create a prominent panel for the summary
-    console.print(Panel(
-        Markdown(str(summary)),
-        title="[bold white] Summary [/bold white]",
-        border_style="magenta",  
-        padding=(1, 2),          
-        expand=False
-    ))
-    console.print("")  
+    console.print(
+        Panel(
+            Markdown(str(summary)),
+            title="[bold white] Summary [/bold white]",
+            border_style="magenta",
+            padding=(1, 2),
+            expand=False,
+        )
+    )
+    console.print("")
+
 
 def print_analysis(result: dict):
     """Print the detailed Q&A analysis from the AI."""
@@ -220,7 +227,7 @@ def run_workflow(paper_id: str):
 def main():
     """Main entry point."""
     paper_id = "2510.24081"  # https://huggingface.co/api/papers/2510.24081
-    #paper_id = "AuZoDsNmG_s"  # New YouTube ID (Andrew Ng: AI Career Growth)
+    # paper_id = "AuZoDsNmG_s"  # New YouTube ID (Andrew Ng: AI Career Growth)
     run_workflow(paper_id=paper_id)
 
 

@@ -59,7 +59,9 @@ def analyze_paper(paper_id: str, selected_keywords: list) -> tuple[str, str, str
         summary = result.get("summary", "No summary available")
 
         # Format the analysis if available
-        analysis_text = format_analysis(analysis) if analysis else "No analysis available"
+        analysis_text = (
+            format_analysis(analysis) if analysis else "No analysis available"
+        )
 
         status_msg = f"Analysis completed successfully for: {paper_id_result}"
 
@@ -129,7 +131,11 @@ def create_ui():
         "Safety",
     ]
 
-    with gr.Blocks(title="Research Radar - Paper Analysis", theme=theme, css="body { max-width: 1200px; margin: 0 auto; padding: 20px; } textarea { scrollbar-width: none; } textarea::-webkit-scrollbar { display: none; }") as demo:
+    with gr.Blocks(
+        title="Research Radar - Paper Analysis",
+        theme=theme,
+        css="body { max-width: 1200px; margin: 0 auto; padding: 20px; } textarea { scrollbar-width: none; } textarea::-webkit-scrollbar { display: none; }",
+    ) as demo:
         gr.Markdown(
             """
             <div style="text-align: center; padding: 60px 20px 50px 20px; backdrop-filter: blur(10px); border-radius: 16px; margin-bottom: 40px; border: 1px solid rgba(255, 255, 255, 0.7);">

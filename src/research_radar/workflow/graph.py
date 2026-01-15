@@ -26,18 +26,20 @@ from research_radar.workflow.nodes import (
     publish_results_node,
 )
 
+
 def route_source_type(state: dict) -> str:
     """
     Router: Uses regex to check if input is an ArXiv ID/URL or a YouTube URL.
     """
     input_id = state.get("paper_id", "").strip()
-    
+
     youtube_pattern = r"(youtube\.com|youtu\.be|^[a-zA-Z0-9_-]{11}$)"
-    
+
     if re.search(youtube_pattern, input_id):
         return "extract_youtube_information"
-    
+
     return "extract_paper_information"
+
 
 def build_graph():
     """Build and compile the paper processing workflow graph."""
@@ -56,9 +58,8 @@ def build_graph():
         route_source_type,
         {
             "extract_paper_information": EXTRACT_PAPER_INFORMATION,
-            "extract_youtube_information": EXTRACT_YOUTUBE_INFORMATION
-        }
+            "extract_youtube_information": EXTRACT_YOUTUBE_INFORMATION,
+        },
     )
-
 
     return flow.compile()

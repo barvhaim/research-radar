@@ -66,6 +66,7 @@ def extract_paper_information_node(state: WorkflowState) -> Command:
         },
     )
 
+
 def extract_youtube_information_node(state: WorkflowState) -> Command:
     """
     Node that performs YouTube metadata extraction.
@@ -87,15 +88,16 @@ def extract_youtube_information_node(state: WorkflowState) -> Command:
                 "error": f"Metadata extraction failed for video {video_id}.",
             },
         )
-    
+
     return Command(
-        goto=FILTER_PAPER_RELEVANCE, 
+        goto=FILTER_PAPER_RELEVANCE,
         update={
             "status": WorkflowStatus.RUNNING.value,
             "metadata": metadata,
-            "source_type": "youtube" 
+            "source_type": "youtube",
         },
     )
+
 
 def filter_paper_relevance_node(state: WorkflowState) -> Command:
     """
@@ -113,9 +115,9 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
     paper_id = state.get("paper_id")
 
     source_type = state.get("source_type", "paper")
-    
+
     if source_type == "youtube":
-        target_content_node = "extract_youtube_content" 
+        target_content_node = "extract_youtube_content"
     else:
         target_content_node = EXTRACT_PAPER_CONTENT
 
@@ -131,11 +133,11 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
                 "error": "Missing metadata or required keywords for relevance check.",
             },
         )
-        
+
     if not required_keywords:
         logger.info("No required keywords specified. Skipping relevance check.")
         return Command(
-            goto=target_content_node, 
+            goto=target_content_node,
             update={
                 "status": WorkflowStatus.RUNNING.value,
             },
@@ -149,10 +151,9 @@ def filter_paper_relevance_node(state: WorkflowState) -> Command:
     is_relevant = checker.check_relevance(state)
 
     if is_relevant:
-        next_node = target_content_node 
+        next_node = target_content_node
         logger.info(
-            f"Item %s: Determined relevant. Routing to: %s",
-            paper_id, next_node
+            f"Item %s: Determined relevant. Routing to: %s", paper_id, next_node
         )
         status = WorkflowStatus.RUNNING.value
     else:
@@ -197,6 +198,7 @@ def extract_paper_content_node(state: WorkflowState) -> Command:
         },
     )
 
+
 def extract_youtube_content_node(state: WorkflowState) -> Command:
     """
     Node that performs YouTube transcript extraction.
@@ -210,20 +212,16 @@ def extract_youtube_content_node(state: WorkflowState) -> Command:
 
         if not transcript:
             return Command(
-                goto=END, 
-                update={"error": "Failed to extract transcript (no subtitles found)."}
+                goto=END,
+                update={"error": "Failed to extract transcript (no subtitles found)."},
             )
-            
-        return Command(
-            goto=EMBED_CONTENT,
-            update={
-                "content": transcript
-            }
-        )
+
+        return Command(goto=EMBED_CONTENT, update={"content": transcript})
 
     except Exception as e:
         logger.error(f"Content extraction failed: {e}")
         return Command(goto=END, update={"error": str(e)})
+
 
 def embed_content_node(state: WorkflowState) -> Command:
     """
