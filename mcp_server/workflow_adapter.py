@@ -22,12 +22,14 @@ def create_initial_state(paper_id: str, required_keywords: list = None) -> dict:
     Args:
         paper_id: ID of paper.
         required_keywords: List of keywords to filter by (optional).
+            If None, uses default keywords. If empty list [], skips filtering.
 
     Returns:
         Initial workflow state dictionary.
     """
-    # Default keywords if none provided
-    if required_keywords is None or len(required_keywords) == 0:
+    # Only use default keywords if None (not provided at all)
+    # Empty list [] means skip filtering
+    if required_keywords is None:
         required_keywords = [
             "large language models (LLMs)",
             "instruction following (IF)",

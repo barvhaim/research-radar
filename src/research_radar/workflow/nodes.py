@@ -1,6 +1,7 @@
 """Module containing workflow node implementations for paper processing."""
 
 import logging
+import re
 from langgraph.graph import END
 from langgraph.types import Command
 
@@ -23,6 +24,42 @@ from research_radar.workflow.node_types import (
 rag_processor = PaperRAGProcessor()  # Global instance to manage RAG pipline
 
 logger = logging.getLogger(__name__)
+
+
+def extract_youtube_video_id(url_or_id: str) -> str:
+    """
+    Extract YouTube video ID from various URL formats or return as-is if already an ID.
+
+    Supported formats:
+    - https://www.youtube.com/watch?v=VIDEO_ID
+    - https://youtu.be/VIDEO_ID
+    - https://www.youtube.com/embed/VIDEO_ID
+    - VIDEO_ID (11-character ID)
+    """
+    if not url_or_id:
+        return url_or_id
+
+    # Already a video ID (11 characters, alphanumeric with - and _)
+    if re.match(r"^[a-zA-Z0-9_-]{11}$", url_or_id):
+        return url_or_id
+
+    # youtube.com/watch?v=VIDEO_ID
+    match = re.search(r"youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})", url_or_id)
+    if match:
+        return match.group(1)
+
+    # youtu.be/VIDEO_ID
+    match = re.search(r"youtu\.be/([a-zA-Z0-9_-]{11})", url_or_id)
+    if match:
+        return match.group(1)
+
+    # youtube.com/embed/VIDEO_ID
+    match = re.search(r"youtube\.com/embed/([a-zA-Z0-9_-]{11})", url_or_id)
+    if match:
+        return match.group(1)
+
+    # Return as-is if no pattern matched
+    return url_or_id
 
 
 def extract_paper_information_node(state: WorkflowState) -> Command:
@@ -70,10 +107,11 @@ def extract_youtube_information_node(state: WorkflowState) -> Command:
     """
     Node that performs YouTube metadata extraction.
     """
-    video_id = state.get("paper_id")
-    if not video_id:
+    raw_input = state.get("paper_id")
+    if not raw_input:
         return Command(goto=END, update={"error": "No Video ID provided."})
 
+    video_id = extract_youtube_video_id(raw_input)
     logger.info("Extracting YouTube video (%s) information", video_id)
 
     extractor = YouTubeMetadataExtractor(video_id=video_id)
@@ -200,7 +238,8 @@ def extract_youtube_content_node(state: WorkflowState) -> Command:
     """
     Node that performs YouTube transcript extraction.
     """
-    video_id = state.get("paper_id")
+    raw_input = state.get("paper_id")
+    video_id = extract_youtube_video_id(raw_input)
     logger.info("Extracting YouTube content for: %s", video_id)
 
     try:

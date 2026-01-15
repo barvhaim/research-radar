@@ -12,22 +12,41 @@ logger = logging.getLogger(__name__)
 
 def format_analysis(analysis: dict) -> str:
     """
-    Format the analysis dictionary into a readable string.
+    Format the analysis dictionary into a readable markdown string.
 
     Args:
         analysis: Dictionary with questions as keys and answers as values
 
     Returns:
-        Formatted analysis text
+        Formatted analysis text with clear visual separation
     """
     if not analysis:
-        return "No analysis available"
+        return "*No analysis available*"
 
     formatted_parts = []
-    for question, answer in analysis.items():
-        formatted_parts.append(f"**{question}**\n\n{answer}\n")
+    for i, (question, answer) in enumerate(analysis.items(), 1):
+        formatted_parts.append(f"#### {i}. {question}\n\n{answer}")
 
-    return "\n---\n\n".join(formatted_parts)
+    return "\n\n---\n\n".join(formatted_parts)
+
+
+def format_summary(summary: str) -> str:
+    """
+    Format the summary for better readability by adding paragraph breaks.
+
+    Args:
+        summary: Raw summary text
+
+    Returns:
+        Formatted summary with better paragraph structure
+    """
+    if not summary:
+        return "*No summary available*"
+
+    # Split long text into paragraphs at sentence boundaries for readability
+    # Add line breaks after sentences that end a thought
+    sentences = summary.replace(". ", ".\n\n").replace("; ", ";\n\n")
+    return sentences
 
 
 def analyze_paper(paper_id: str, selected_keywords: list) -> tuple[str, str, str]:
@@ -67,7 +86,10 @@ def analyze_paper(paper_id: str, selected_keywords: list) -> tuple[str, str, str
 
         status_msg = f"Analysis completed successfully for: {paper_id_result}"
 
-        return status_msg, analysis_text, summary
+        # Format summary for readability
+        formatted_summary = format_summary(summary)
+
+        return status_msg, analysis_text, formatted_summary
 
     except Exception as e:
         logger.error("Error analyzing %s: %s", paper_id, e, exc_info=True)
@@ -133,77 +155,83 @@ def create_ui():
         "Safety",
     ]
 
-    custom_css = (
-        "body { max-width: 1200px; margin: 0 auto; padding: 20px; } "
-        "textarea { scrollbar-width: none; } "
-        "textarea::-webkit-scrollbar { display: none; }"
-    )
+    custom_css = """
+        .content-box {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 8px 0;
+            line-height: 1.7;
+        }
+        .content-box p { margin-bottom: 12px; }
+        .section-title {
+            color: #60a5fa;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+    """
+
     with gr.Blocks(
         title="Research Radar - Paper Analysis",
-        theme=theme,
-        css=custom_css,
     ) as demo:
+        # Header
+        gr.Markdown("# Research Radar")
         gr.Markdown(
-            """
-<div style="text-align: center; padding: 60px 20px 50px 20px;
-backdrop-filter: blur(10px); border-radius: 16px; margin-bottom: 40px;
-border: 1px solid rgba(255, 255, 255, 0.7);">
-<h1 style="margin: 0; font-size: 48px; font-weight: 900; color: #1e40af;
-letter-spacing: -1.2px; font-family: 'Inter', sans-serif;">Research Radar</h1>
-<p style="margin: 16px 0 8px 0; font-size: 20px; color: #3b82f6;
-font-weight: 600;">Intelligent Research Analysis Platform</p>
-<p style="margin: 0; font-size: 16px; color: #64748b; font-weight: 400;
-line-height: 1.5;">Extract insights from papers and videos with AI-powered
-filtering and analysis</p>
-</div>
-            """
+            "*Extract insights from papers and videos with AI-powered analysis*"
         )
 
-        with gr.Row(equal_height=False):
-            with gr.Column(scale=3):
+        # Input Section
+        with gr.Group():
+            with gr.Row():
                 paper_id_input = gr.Textbox(
-                    label="Enter content ID",
-                    placeholder="Paper ID (e.g. 2510.24081) or YouTube ID (e.g. qYNweeDHiyU)",
+                    label="Content URL or ID",
+                    placeholder="ArXiv ID (2510.24081) or YouTube URL (https://youtube.com/watch?v=...)",
                     lines=1,
+                    scale=4,
+                )
+                analyze_btn = gr.Button(
+                    "Analyze",
+                    variant="primary",
+                    size="lg",
+                    scale=1,
                 )
 
-                keywords_input = gr.Dropdown(
-                    choices=available_keywords,
-                    label="Select Keywords (optional - leave empty to skip filtering)",
-                    value=[],
-                    multiselect=True,
-                    interactive=True,
-                    allow_custom_value=True,
-                )
+            keywords_input = gr.Dropdown(
+                choices=available_keywords,
+                label="Filter by Keywords (optional - leave empty to analyze all content)",
+                value=[],
+                multiselect=True,
+                interactive=True,
+                allow_custom_value=True,
+            )
 
-            with gr.Column(scale=0.5):
-                gr.Markdown("")  # Spacer for button alignment
-                analyze_btn = gr.Button("→", variant="primary", size="lg", min_width=50)
-
+        # Status
         status_output = gr.Textbox(
             label="Status",
             interactive=False,
             lines=1,
         )
 
-        gr.Markdown("")  # Spacing
+        # Summary Section (first - most important)
+        gr.Markdown("## Summary", elem_classes=["section-title"])
+        summary_output = gr.Markdown(
+            value="*Summary will appear here after analysis...*",
+            elem_classes=["content-box"],
+        )
 
-        with gr.Row():
-            with gr.Column():
-                analysis_output = gr.Textbox(
-                    label="Analysis (Question-Answer)",
-                    interactive=False,
-                    lines=12,
-                )
+        # Analysis Section (detailed Q&A below)
+        gr.Markdown("## Detailed Analysis", elem_classes=["section-title"])
+        analysis_output = gr.Markdown(
+            value="*Detailed analysis will appear here...*",
+            elem_classes=["content-box"],
+        )
 
-            with gr.Column():
-                summary_output = gr.Textbox(
-                    label="Summary",
-                    interactive=False,
-                    lines=12,
-                )
-
-        gr.Markdown("")  # Spacing
+        # Footer note
+        gr.Markdown(
+            "---\n*Processing may take a few moments depending on content size.*",
+        )
 
         # Connect the button click to the analysis function
         analyze_btn.click(
@@ -219,30 +247,21 @@ filtering and analysis</p>
             outputs=[status_output, analysis_output, summary_output],
         )
 
-        gr.Markdown(
-            """
-<div style="margin-top: 40px; padding: 20px;
-background: rgba(59, 130, 246, 0.05); border-radius: 12px;
-border-left: 4px solid #3b82f6;">
-<p style="margin: 0; font-size: 14px; color: #FFFFFF; font-weight: 500;">
-Processing may take a few moments depending on content size.</p>
-</div>
-            """
-        )
-
-    return demo
+    return demo, theme, custom_css
 
 
 def main():
     """Main entry point for the UI application."""
     logger.info("Starting Research Radar UI...")
 
-    demo = create_ui()
+    demo, theme, custom_css = create_ui()
     demo.launch(
         server_name="127.0.0.1",
         server_port=7860,
         share=False,
         show_error=True,
+        theme=theme,
+        css=custom_css,
     )
 
 

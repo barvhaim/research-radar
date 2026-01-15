@@ -1,5 +1,6 @@
 """YouTube video transcript extraction using yt-dlp."""
 
+import glob
 import logging
 import os
 import re
@@ -131,9 +132,25 @@ class YouTubeContentExtractor:
 
     def _cleanup_files(self, files: List[str]):
         """Deletes temporary subtitle files."""
+        # Clean up explicitly tracked files
         for file in files:
             try:
                 if os.path.exists(file):
                     os.remove(file)
+                    logger.debug("Removed file: %s", file)
             except Exception as e:
                 logger.warning("Failed to remove file %s: %s", file, e)
+
+        # Also clean up any VTT files matching the video ID pattern
+        # yt-dlp may create files like: video_id.en.vtt, video_id.en-US.vtt, etc.
+        vtt_patterns = [
+            f"{self.video_id}*.vtt",
+            f"{self.video_id}*.vtt.part",
+        ]
+        for pattern in vtt_patterns:
+            for vtt_file in glob.glob(pattern):
+                try:
+                    os.remove(vtt_file)
+                    logger.debug("Cleaned up VTT file: %s", vtt_file)
+                except Exception as e:
+                    logger.warning("Failed to remove VTT file %s: %s", vtt_file, e)
