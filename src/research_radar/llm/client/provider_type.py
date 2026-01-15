@@ -8,3 +8,5 @@ class LLMProviderType(Enum):
 
     OLLAMA = "ollama"
     GOOGLE = "google"
+    OPENAI = "openai"
+    RITS = "rits"

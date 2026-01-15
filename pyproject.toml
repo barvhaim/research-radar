@@ -19,6 +19,7 @@ dependencies = [
     "langchain-huggingface>=1.0.0",
     "langchain-ibm>=1.0.1",
     "langchain-ollama>=1.0.0",
+    "langchain-openai>=1.1.7",
     "langchain-text-splitters>=1.0.0",
     "langgraph>=1.0.1",
     "python-dotenv>=1.2.1",
