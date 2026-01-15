@@ -41,3 +41,13 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.pylint.messages_control]
+disable = [
+    "duplicate-code",  # R0801: Similar code in different modules is acceptable
+    "broad-exception-caught",  # W0718: Intentional for external service error handling
+    "fixme",  # W0511: TODO comments are acceptable during development
+]
+
+[tool.pylint.main]
+init-hook = "import sys; sys.path.insert(0, '.')"

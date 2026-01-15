@@ -54,7 +54,7 @@ def _extract_sentence(line):
     return full_sentence
 
 
-def get_video_transcript(
+def get_video_transcript(  # pylint: disable=too-many-locals,too-many-statements
     video_id: str,
 ) -> str:
     """

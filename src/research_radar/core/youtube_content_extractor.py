@@ -11,7 +11,7 @@ import yt_dlp
 logger = logging.getLogger(__name__)
 
 
-class YouTubeContentExtractor:
+class YouTubeContentExtractor:  # pylint: disable=too-few-public-methods
     """A class to extract content (transcript) from a YouTube video."""
 
     MAX_RETRIES = 3

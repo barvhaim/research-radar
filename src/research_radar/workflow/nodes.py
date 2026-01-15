@@ -387,8 +387,8 @@ def analyze_paper_node(
 
 
 def publish_results_node(
-    state: WorkflowState,
-) -> Command:  # pylint: disable=unused-argument
+    _state: WorkflowState,
+) -> Command:
     """
     Node that publishes the results of the analysis.
     :param state:

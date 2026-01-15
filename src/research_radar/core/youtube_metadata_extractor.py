@@ -8,7 +8,7 @@ import yt_dlp
 logger = logging.getLogger(__name__)
 
 
-class YouTubeMetadataExtractor:
+class YouTubeMetadataExtractor:  # pylint: disable=too-few-public-methods
     """A class to extract metadata from YouTube videos."""
 
     YOUTUBE_BASE_WATCH_URL = "https://www.youtube.com/watch?v="

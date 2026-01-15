@@ -83,7 +83,7 @@ def get_chat_llm_client(
         model_name = os.getenv("LLM_MODEL")
 
     if LLM_PROVIDER == LLMProviderType.OLLAMA:
-        from langchain_ollama import ChatOllama
+        from langchain_ollama import ChatOllama  # pylint: disable=import-outside-toplevel
 
         return ChatOllama(
             **_get_base_llm_settings(
@@ -92,9 +92,8 @@ def get_chat_llm_client(
         )
 
     if LLM_PROVIDER in (LLMProviderType.OPENAI, LLMProviderType.RITS):
-        from langchain_openai import (
-            ChatOpenAI,
-        )  # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
+        from langchain_openai import ChatOpenAI
 
         return ChatOpenAI(
             **_get_base_llm_settings(
@@ -103,6 +102,7 @@ def get_chat_llm_client(
         )
 
     if LLM_PROVIDER == LLMProviderType.GOOGLE:
+        # pylint: disable-next=import-outside-toplevel
         from langchain_google_vertexai import ChatVertexAI
 
         return ChatVertexAI(

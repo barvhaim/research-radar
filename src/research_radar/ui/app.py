@@ -1,9 +1,10 @@
 """Gradio web UI for Research Radar paper analysis."""
+# pylint: disable=no-member
 
 import logging
 import gradio as gr
 from dotenv import load_dotenv
-from mcp_server.workflow_adapter import run_workflow_for_paper
+from mcp_server.workflow_adapter import run_workflow_for_paper  # pylint: disable=import-error
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -187,7 +188,7 @@ def create_ui():
             with gr.Row():
                 paper_id_input = gr.Textbox(
                     label="Content URL or ID",
-                    placeholder="ArXiv ID (2510.24081) or YouTube URL (https://youtube.com/watch?v=...)",
+                    placeholder="ArXiv ID (2510.24081) or YouTube URL",
                     lines=1,
                     scale=4,
                 )

@@ -22,6 +22,8 @@ class PaperAnalyzer:
         self.questions = [
             "What problem does the content address?",
             "Why is this problem important?",
+            "What methods or approach were used to solve the problem?",
+            "What are the main results or findings of the content?",
             "What is the key insight of the content?",
         ]
 
