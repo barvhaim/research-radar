@@ -168,7 +168,7 @@ function App() {
                     <TextInput
                       id="paper-input"
                       labelText="Paper ID or URL"
-                      placeholder="ArXiv ID (e.g., 2510.24081) or YouTube URL"
+                      placeholder="ArXiv ID or URL, or YouTube URL"
                       value={paperId}
                       onChange={(e) => setPaperId(e.target.value)}
                       onKeyPress={handleKeyPress}

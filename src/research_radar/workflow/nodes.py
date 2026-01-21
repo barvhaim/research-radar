@@ -21,6 +21,28 @@ from research_radar.workflow.node_types import (
     EMBED_CONTENT,
 )
 
+def extract_arxiv_id(input_str: str) -> str:
+    """
+    Extracts the ID (e.g., 2601.09625) from a full URL or a raw ID.
+    Supports:
+    - Full URLs: https://arxiv.org/abs/2510.24081, https://arxiv.org/pdf/2510.24081.pdf
+    - Raw IDs: 2510.24081
+    """
+    if not input_str:
+        return input_str
+    
+    # Look for 4 digits, a dot, then 4-5 digits (with optional version like v1, v2)
+    match = re.search(r'(\d{4}\.\d{4,5}(?:v\d+)?)', input_str)
+    
+    if match:
+        extracted_id = match.group(1)
+        logger.info(f"Extracted arXiv ID from '{input_str}' -> '{extracted_id}'")
+        return extracted_id
+    
+    # If we couldn't find an ID, just return the input as-is
+    logger.warning(f"Could not extract arXiv ID from '{input_str}', returning as-is")
+    return input_str
+
 rag_processor = PaperRAGProcessor()  # Global instance to manage RAG pipline
 
 logger = logging.getLogger(__name__)
@@ -72,9 +94,12 @@ def extract_paper_information_node(state: WorkflowState) -> Command:
     Returns:
         Command: A command to execute the metadata extraction.
     """
-    paper_id = state.get("paper_id")
-    if not paper_id:
+    raw_input = state.get("paper_id")
+
+    if not raw_input:
         return Command(goto=END, update={"error": "No paper ID provided."})
+    
+    paper_id = extract_arxiv_id(raw_input)
 
     logger.info(
         "Extracting paper (%s) information",
