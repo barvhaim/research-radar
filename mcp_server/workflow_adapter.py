@@ -97,4 +97,5 @@ def run_workflow_for_paper(
         "paper_id": result.get("paper_id", paper_id),
         "summary": summary,
         "analysis": result.get("analysis"),
+        "paper_hash_id": result.get("paper_hash_id"),
     }

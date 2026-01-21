@@ -412,7 +412,7 @@ def analyze_paper_node(
 
 
 def publish_results_node(
-    _state: WorkflowState,
+    state: WorkflowState,
 ) -> Command:
     """
     Node that publishes the results of the analysis.
@@ -421,11 +421,15 @@ def publish_results_node(
     """
 
     logger.info("Publishing analysis results")
+    
+    # Preserve the paper_hash_id through to the final result
+    paper_hash_id = state.get("paper_hash_id")
 
     # TODO: Implement results publishing logic
     return Command(
         goto=END,
         update={
             "status": WorkflowStatus.COMPLETED.value,
+            "paper_hash_id": paper_hash_id,
         },
     )
