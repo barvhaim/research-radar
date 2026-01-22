@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
   Header,
@@ -14,7 +14,7 @@ import {
   Tile,
   Theme,
 } from '@carbon/react'
-import { Analytics, Search } from '@carbon/icons-react'
+import { Analytics, Search, Send, User, Bot } from '@carbon/icons-react'
 
 const KEYWORDS = [
   { id: 'llm', label: 'Large Language Models (LLMs)' },
@@ -82,6 +82,18 @@ function App() {
   const [analysis, setAnalysis] = useState(null)
   const [error, setError] = useState('')
   const [youtubeId, setYoutubeId] = useState(null)
+  
+  // --- CHAT STATE ---
+  const [hashId, setHashId] = useState(null)
+  const [chatInput, setChatInput] = useState('')
+  const [chatMessages, setChatMessages] = useState([])
+  const [chatLoading, setChatLoading] = useState(false)
+  const chatEndRef = useRef(null)
+
+  // Scroll to bottom of chat when messages change
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
 
   const formatAnalysis = (analysisData) => {
     if (!analysisData || Object.keys(analysisData).length === 0) {
@@ -104,6 +116,8 @@ function App() {
     setSummary('')
     setAnalysis(null)
     setYoutubeId(null)
+    setHashId(null)
+    setChatMessages([]) // Reset chat on new analysis
 
     // Check if it's a YouTube URL and extract video ID
     const videoId = extractYouTubeId(paperId.trim())
@@ -127,6 +141,12 @@ function App() {
       setStatus(`Analysis completed for: ${result.paper_id}`)
       setSummary(result.summary || 'No summary available')
       setAnalysis(result.analysis)
+      
+      // Capture the Hash ID for the chat feature
+      if (result.hash_id) {
+        setHashId(result.hash_id)
+      }
+
       if (videoId) setYoutubeId(videoId)
     } catch (err) {
       setError(err.message)
@@ -136,9 +156,49 @@ function App() {
     }
   }
 
+  const handleChat = async () => {
+    if (!chatInput.trim() || !hashId) return
+
+    const userMessage = { role: 'user', content: chatInput }
+    setChatMessages(prev => [...prev, userMessage])
+    setChatInput('')
+    setChatLoading(true)
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: userMessage.content,
+          hash_id: hashId
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Chat failed')
+      }
+
+      const data = await response.json()
+      const botMessage = { role: 'bot', content: data.answer }
+      setChatMessages(prev => [...prev, botMessage])
+
+    } catch (err) {
+      const errorMessage = { role: 'bot', content: "Error: Could not get response." }
+      setChatMessages(prev => [...prev, errorMessage])
+    } finally {
+      setChatLoading(false)
+    }
+  }
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !loading) {
       handleAnalyze()
+    }
+  }
+
+  const handleChatKeyPress = (e) => {
+    if (e.key === 'Enter' && !chatLoading) {
+      handleChat()
     }
   }
 
@@ -168,7 +228,7 @@ function App() {
                     <TextInput
                       id="paper-input"
                       labelText="Paper ID or URL"
-                      placeholder="ArXiv ID (e.g., 2510.24081) or YouTube URL"
+                      placeholder="ArXiv ID or URL, or YouTube URL"
                       value={paperId}
                       onChange={(e) => setPaperId(e.target.value)}
                       onKeyPress={handleKeyPress}
@@ -266,6 +326,91 @@ function App() {
                 </Tile>
               </Column>
             )}
+
+            {/* --- CHAT SECTION --- */}
+            {hashId && (
+              <Column lg={16} md={8} sm={4}>
+                <h2 className="section-title">Chat with this Paper</h2>
+                <Tile className="content-tile" style={{ display: 'flex', flexDirection: 'column', height: '600px' }}>
+                  
+                  {/* Messages Area */}
+                  <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem', padding: '1rem', background: '#161616' }}>
+                    {chatMessages.length === 0 && (
+                      <p style={{ color: '#8d8d8d', textAlign: 'center', marginTop: '2rem' }}>
+                        Ask a specific question about the paper...
+                      </p>
+                    )}
+                    
+                    {chatMessages.map((msg, idx) => (
+                      <div key={idx} style={{ 
+                        display: 'flex', 
+                        marginBottom: '1rem',
+                        justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          maxWidth: '80%',
+                          flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
+                          alignItems: 'flex-start',
+                          gap: '0.5rem'
+                        }}>
+                          {/* Icon */}
+                          <div style={{ 
+                            background: msg.role === 'user' ? '#0f62fe' : '#393939', 
+                            padding: '8px', 
+                            borderRadius: '50%' 
+                          }}>
+                            {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
+                          </div>
+
+                          {/* Text Bubble */}
+                          <div style={{
+                            background: msg.role === 'user' ? '#0f62fe' : '#393939',
+                            color: '#fff',
+                            padding: '0.75rem 1rem',
+                            borderRadius: '8px',
+                            lineHeight: '1.5'
+                          }}>
+                             <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {chatLoading && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#8d8d8d' }}>
+                        <Bot size={16} />
+                        <span>Thinking...</span>
+                      </div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+
+                  {/* Input Area */}
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1 }}>
+                      <TextInput
+                        id="chat-input"
+                        labelText=""
+                        placeholder="Type your question..."
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyPress={handleChatKeyPress}
+                        disabled={chatLoading}
+                      />
+                    </div>
+                    <Button
+                      hasIconOnly
+                      renderIcon={Send}
+                      tooltipPosition="top"
+                      iconDescription="Send"
+                      onClick={handleChat}
+                      disabled={chatLoading || !chatInput.trim()}
+                    />
+                  </div>
+                </Tile>
+              </Column>
+            )}
+            {/* --- END CHAT SECTION --- */}
 
             {!summary && !loading && (
               <Column lg={16} md={8} sm={4}>

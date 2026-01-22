@@ -83,7 +83,9 @@ def get_chat_llm_client(
         model_name = os.getenv("LLM_MODEL")
 
     if LLM_PROVIDER == LLMProviderType.OLLAMA:
-        from langchain_ollama import ChatOllama  # pylint: disable=import-outside-toplevel
+        from langchain_ollama import (
+            ChatOllama,
+        )  # pylint: disable=import-outside-toplevel
 
         return ChatOllama(
             **_get_base_llm_settings(

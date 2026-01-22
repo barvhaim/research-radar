@@ -1,10 +1,13 @@
 """Gradio web UI for Research Radar paper analysis."""
+
 # pylint: disable=no-member
 
 import logging
 import gradio as gr
 from dotenv import load_dotenv
-from mcp_server.workflow_adapter import run_workflow_for_paper  # pylint: disable=import-error
+from mcp_server.workflow_adapter import (
+    run_workflow_for_paper,
+)  # pylint: disable=import-error
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
