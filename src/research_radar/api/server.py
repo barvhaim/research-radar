@@ -53,7 +53,9 @@ class AnalysisResponse(BaseModel):
 
     paper_id: str = Field(..., description="The analyzed paper/video ID")
     summary: str = Field(..., description="Summary of the content")
-    analysis: Optional[dict] = Field(default=None, description="Detailed analysis with Q&A")
+    analysis: Optional[dict] = Field(
+        default=None, description="Detailed analysis with Q&A"
+    )
     status: str = Field(default="success", description="Status of the analysis")
     hash_id: Optional[str] = Field(
         default=None, description="Hash ID of the paper for RAG queries"
@@ -64,7 +66,9 @@ class ChatRequest(BaseModel):
     """Request model for chatting with a paper."""
 
     query: str = Field(..., description="Question to ask about the paper")
-    hash_id: str = Field(..., description="Hash ID of the paper (from analysis response)")
+    hash_id: str = Field(
+        ..., description="Hash ID of the paper (from analysis response)"
+    )
 
 
 class ChatResponse(BaseModel):
@@ -77,10 +81,16 @@ class ChatResponse(BaseModel):
 @app.get("/")
 async def root():
     """Serve the React UI."""
-    frontend_path = Path(__file__).parent.parent.parent.parent / "frontend" / "dist" / "index.html"
+    frontend_path = (
+        Path(__file__).parent.parent.parent.parent / "frontend" / "dist" / "index.html"
+    )
     if frontend_path.exists():
         return FileResponse(frontend_path)
-    return {"message": "Research Radar API", "version": "0.1.0", "endpoints": {"analyze": "/api/analyze", "health": "/api/health"}}
+    return {
+        "message": "Research Radar API",
+        "version": "0.1.0",
+        "endpoints": {"analyze": "/api/analyze", "health": "/api/health"},
+    }
 
 
 @app.get("/api/health")
@@ -114,7 +124,9 @@ async def analyze_content(request: AnalysisRequest):
         # Pass empty list [] to skip relevance check, None for default keywords
         result = run_workflow_for_paper(
             paper_id=request.paper_id.strip(),
-            required_keywords=request.keywords if request.keywords is not None else None,
+            required_keywords=(
+                request.keywords if request.keywords is not None else None
+            ),
         )
 
         return AnalysisResponse(
@@ -126,7 +138,9 @@ async def analyze_content(request: AnalysisRequest):
         )
 
     except Exception as e:
-        logger.error("Error analyzing content %s: %s", request.paper_id, e, exc_info=True)
+        logger.error(
+            "Error analyzing content %s: %s", request.paper_id, e, exc_info=True
+        )
         raise HTTPException(
             status_code=500,
             detail=f"Failed to analyze content: {str(e)}",
@@ -206,10 +220,15 @@ Answer:"""
 # Mount static files for React UI
 frontend_dist = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
 if frontend_dist.exists():
-    app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets")
+    app.mount(
+        "/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets"
+    )
     logger.info("Frontend assets mounted from %s", frontend_dist)
 else:
-    logger.warning("Frontend dist directory not found at %s. UI will not be available.", frontend_dist)
+    logger.warning(
+        "Frontend dist directory not found at %s. UI will not be available.",
+        frontend_dist,
+    )
 
 
 if __name__ == "__main__":

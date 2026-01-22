@@ -51,7 +51,7 @@ class PaperMetadataExtractor:  # pylint: disable=too-few-public-methods
             logger.warning(f"Hugging Face failed ({e}). Attempting ArXiv Fallback...")
             # If HF fails, we call the new fallback function
             return self._fetch_from_arxiv_fallback()
-        
+
         # --- STEP 2: PROCESSING AND FLATTENING METADATA ---
 
         hf_paper_url = f"{self.HUGGINGFACE_PAPERS_WEB_BASE_URL}{self.paper_id}"
@@ -102,16 +102,18 @@ class PaperMetadataExtractor:  # pylint: disable=too-few-public-methods
         }
 
         return paper_info
-    
+
     def _fetch_from_arxiv_fallback(self) -> Optional[Dict]:
         """
         Fallback: Query official ArXiv API if Hugging Face fails.
         """
         arxiv_api_url = "http://export.arxiv.org/api/query"
-        
+
         try:
             # Query ArXiv
-            response = requests.get(arxiv_api_url, params={"id_list": self.paper_id}, timeout=10)
+            response = requests.get(
+                arxiv_api_url, params={"id_list": self.paper_id}, timeout=10
+            )
             if response.status_code != 200:
                 return None
 
@@ -119,18 +121,26 @@ class PaperMetadataExtractor:  # pylint: disable=too-few-public-methods
             root = ET.fromstring(response.content)
             # The namespace often breaks finding items, so we search generically
             entry = root.find("{http://www.w3.org/2005/Atom}entry")
-            
+
             if entry is None:
                 return None
 
             # Extract Data manually from XML
-            title = entry.find("{http://www.w3.org/2005/Atom}title").text.strip().replace("\n", " ")
-            summary = entry.find("{http://www.w3.org/2005/Atom}summary").text.strip().replace("\n", " ")
+            title = (
+                entry.find("{http://www.w3.org/2005/Atom}title")
+                .text.strip()
+                .replace("\n", " ")
+            )
+            summary = (
+                entry.find("{http://www.w3.org/2005/Atom}summary")
+                .text.strip()
+                .replace("\n", " ")
+            )
             published = entry.find("{http://www.w3.org/2005/Atom}published").text
-            
+
             # Get all authors
             authors = [
-                author.find("{http://www.w3.org/2005/Atom}name").text 
+                author.find("{http://www.w3.org/2005/Atom}name").text
                 for author in entry.findall("{http://www.w3.org/2005/Atom}author")
             ]
 
@@ -141,7 +151,7 @@ class PaperMetadataExtractor:  # pylint: disable=too-few-public-methods
                 "id": self.paper_id,
                 "title": title,
                 "publishedAt": published,
-                "hf_paper_url": None, # Not available
+                "hf_paper_url": None,  # Not available
                 "arxiv_pdf_url": f"https://arxiv.org/pdf/{self.paper_id}.pdf",
                 "github_repo": None,
                 "upvotes": 0,
@@ -149,7 +159,7 @@ class PaperMetadataExtractor:  # pylint: disable=too-few-public-methods
                 "ai_summary": None,
                 "ai_keywords": [],
                 "summary": summary,
-                "source": "arxiv_official"
+                "source": "arxiv_official",
             }
 
         except Exception as e:
